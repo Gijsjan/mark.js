@@ -12,927 +12,927 @@
  * new Mark(document.querySelector(".context")).markRegExp(/lorem/gmi);
  */
 class Mark { // eslint-disable-line no-unused-vars
-    private ctx;
-    private ie;
-    private _opt;
-    private _iterator;
+	private ctx;
+	private ie;
+	private _opt;
+	private _iterator;
 
-    /**
-     * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
-     * element, an array of DOM elements, a NodeList or a selector
-     */
-    constructor(ctx) {
-        /**
-         * The context of the instance. Either a DOM element, an array of DOM
-         * elements, a NodeList or a selector
-         * @type {HTMLElement|HTMLElement[]|NodeList|string}
-         * @access protected
-         */
-        this.ctx = ctx;
-        /**
-         * Specifies if the current browser is a IE (necessary for the node
-         * normalization bug workaround). See {@link Mark#unwrapMatches}
-         * @type {boolean}
-         * @access protected
-         */
-        this.ie = false;
-        const ua = window.navigator.userAgent;
-        if(ua.indexOf("MSIE") > -1 || ua.indexOf("Trident") > -1) {
-            this.ie = true;
-        }
-    }
+	/**
+	 * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
+	 * element, an array of DOM elements, a NodeList or a selector
+	 */
+	constructor(ctx) {
+		/**
+		 * The context of the instance. Either a DOM element, an array of DOM
+		 * elements, a NodeList or a selector
+		 * @type {HTMLElement|HTMLElement[]|NodeList|string}
+		 * @access protected
+		 */
+		this.ctx = ctx;
+		/**
+		 * Specifies if the current browser is a IE (necessary for the node
+		 * normalization bug workaround). See {@link Mark#unwrapMatches}
+		 * @type {boolean}
+		 * @access protected
+		 */
+		this.ie = false;
+		const ua = window.navigator.userAgent;
+		if(ua.indexOf("MSIE") > -1 || ua.indexOf("Trident") > -1) {
+			this.ie = true;
+		}
+	}
 
-    /**
-     * Options defined by the user. They will be initialized from one of the
-     * public methods. See {@link Mark#mark}, {@link Mark#markRegExp} and
-     * {@link Mark#unmark} for option properties.
-     * @type {object}
-     * @param {object} [val] - An object that will be merged with defaults
-     * @access protected
-     */
-    set opt(val) {
-        this._opt = Object.assign({}, {
-            "element": "",
-            "className": "",
-            "exclude": [],
-            "separateWordSearch": true,
-            "diacritics": true,
-            "synonyms": {},
-            "accuracy": "partially",
-            "acrossElements": false,
-            "caseSensitive": false,
-            "ignoreJoiners": false,
-            "ignoreGroups": 0,
-            "wildcards": "disabled",
-            "each": () => {},
-            "noMatch": () => {},
-            "filter": () => true,
-            "done": () => {},
-            "debug": false,
-            "log": window.console
-        }, val);
-    }
+	/**
+	 * Options defined by the user. They will be initialized from one of the
+	 * public methods. See {@link Mark#mark}, {@link Mark#markRegExp} and
+	 * {@link Mark#unmark} for option properties.
+	 * @type {object}
+	 * @param {object} [val] - An object that will be merged with defaults
+	 * @access protected
+	 */
+	set opt(val) {
+		this._opt = Object.assign({}, {
+			"element": "",
+			"className": "",
+			"exclude": [],
+			"separateWordSearch": true,
+			"diacritics": true,
+			"synonyms": {},
+			"accuracy": "partially",
+			"acrossElements": false,
+			"caseSensitive": false,
+			"ignoreJoiners": false,
+			"ignoreGroups": 0,
+			"wildcards": "disabled",
+			"each": () => {},
+			"noMatch": () => {},
+			"filter": () => true,
+			"done": () => {},
+			"debug": false,
+			"log": window.console
+		}, val);
+	}
 
-    get opt() {
-        return this._opt;
-    }
+	get opt() {
+		return this._opt;
+	}
 
-    /**
-     * An instance of DOMIterator
-     * @type {DOMIterator}
-     * @access protected
-     */
-    get iterator() {
-        if(!this._iterator) {
-            this._iterator = new DOMIterator(
-                this.ctx,
-                this.opt.exclude,
-            );
-        }
-        return this._iterator;
-    }
+	/**
+	 * An instance of DOMIterator
+	 * @type {DOMIterator}
+	 * @access protected
+	 */
+	get iterator() {
+		if(!this._iterator) {
+			this._iterator = new DOMIterator(
+				this.ctx,
+				this.opt.exclude,
+			);
+		}
+		return this._iterator;
+	}
 
-    /**
-     * Logs a message if log is enabled
-     * @param {string} msg - The message to log
-     * @param {string} [level="debug"] - The log level, e.g. <code>warn</code>
-     * <code>error</code>, <code>debug</code>
-     * @access protected
-     */
-    log(msg, level = "debug") {
-        const log = this.opt.log;
-        if(!this.opt.debug) {
-            return;
-        }
-        if(typeof log === "object" && typeof log[level] === "function") {
-            log[level](`mark.js: ${msg}`);
-        }
-    }
+	/**
+	 * Logs a message if log is enabled
+	 * @param {string} msg - The message to log
+	 * @param {string} [level="debug"] - The log level, e.g. <code>warn</code>
+	 * <code>error</code>, <code>debug</code>
+	 * @access protected
+	 */
+	log(msg, level = "debug") {
+		const log = this.opt.log;
+		if(!this.opt.debug) {
+			return;
+		}
+		if(typeof log === "object" && typeof log[level] === "function") {
+			log[level](`mark.js: ${msg}`);
+		}
+	}
 
-    /**
-     * Escapes a string for usage within a regular expression
-     * @param {string} str - The string to escape
-     * @return {string}
-     * @access protected
-     */
-    escapeStr(str) {
-        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-    }
+	/**
+	 * Escapes a string for usage within a regular expression
+	 * @param {string} str - The string to escape
+	 * @return {string}
+	 * @access protected
+	 */
+	escapeStr(str) {
+		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+	}
 
-    /**
-     * Creates a regular expression string to match the specified search
-     * term including synonyms, diacritics and accuracy if defined
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createRegExp(str) {
-        if(this.opt.wildcards !== "disabled") {
-            str = this.setupWildcardsRegExp(str);
-        }
-        str = this.escapeStr(str);
-        if(Object.keys(this.opt.synonyms).length) {
-            str = this.createSynonymsRegExp(str);
-        }
-        if(this.opt.ignoreJoiners) {
-            str = this.setupIgnoreJoinersRegExp(str);
-        }
-        if(this.opt.diacritics) {
-            str = this.createDiacriticsRegExp(str);
-        }
-        str = this.createMergedBlanksRegExp(str);
-        if(this.opt.ignoreJoiners) {
-            str = this.createIgnoreJoinersRegExp(str);
-        }
-        if(this.opt.wildcards !== "disabled") {
-            str = this.createWildcardsRegExp(str);
-        }
-        str = this.createAccuracyRegExp(str);
-        return str;
-    }
+	/**
+	 * Creates a regular expression string to match the specified search
+	 * term including synonyms, diacritics and accuracy if defined
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createRegExp(str) {
+		if(this.opt.wildcards !== "disabled") {
+			str = this.setupWildcardsRegExp(str);
+		}
+		str = this.escapeStr(str);
+		if(Object.keys(this.opt.synonyms).length) {
+			str = this.createSynonymsRegExp(str);
+		}
+		if(this.opt.ignoreJoiners) {
+			str = this.setupIgnoreJoinersRegExp(str);
+		}
+		if(this.opt.diacritics) {
+			str = this.createDiacriticsRegExp(str);
+		}
+		str = this.createMergedBlanksRegExp(str);
+		if(this.opt.ignoreJoiners) {
+			str = this.createIgnoreJoinersRegExp(str);
+		}
+		if(this.opt.wildcards !== "disabled") {
+			str = this.createWildcardsRegExp(str);
+		}
+		str = this.createAccuracyRegExp(str);
+		return str;
+	}
 
-    /**
-     * Creates a regular expression string to match the defined synonyms
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createSynonymsRegExp(str) {
-        const syn = this.opt.synonyms,
-            sens = this.opt.caseSensitive ? "" : "i";
-        for(let index in syn) {
-            if(syn.hasOwnProperty(index)) {
-                const value = syn[index],
-                    k1 = this.opt.wildcards !== "disabled" ?
-                    this.setupWildcardsRegExp(index) :
-                    this.escapeStr(index),
-                    k2 = this.opt.wildcards !== "disabled" ?
-                    this.setupWildcardsRegExp(value) :
-                    this.escapeStr(value);
-                if(k1 !== "" && k2 !== "") {
-                    str = str.replace(
-                        new RegExp(
-                            `(${k1}|${k2})`,
-                            `gm${sens}`
-                        ),
-                        `(${k1}|${k2})`
-                    );
-                }
-            }
-        }
-        return str;
-    }
+	/**
+	 * Creates a regular expression string to match the defined synonyms
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createSynonymsRegExp(str) {
+		const syn = this.opt.synonyms,
+			sens = this.opt.caseSensitive ? "" : "i";
+		for(let index in syn) {
+			if(syn.hasOwnProperty(index)) {
+				const value = syn[index],
+					k1 = this.opt.wildcards !== "disabled" ?
+					this.setupWildcardsRegExp(index) :
+					this.escapeStr(index),
+					k2 = this.opt.wildcards !== "disabled" ?
+					this.setupWildcardsRegExp(value) :
+					this.escapeStr(value);
+				if(k1 !== "" && k2 !== "") {
+					str = str.replace(
+						new RegExp(
+							`(${k1}|${k2})`,
+							`gm${sens}`
+						),
+						`(${k1}|${k2})`
+					);
+				}
+			}
+		}
+		return str;
+	}
 
-    /**
-     * Sets up the regular expression string to allow later insertion of
-     * wildcard regular expression matches
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    setupWildcardsRegExp(str) {
-        // replace single character wildcard with unicode 0001
-        str = str.replace(/(?:\\)*\?/g, val => {
-            return val.charAt(0) === "\\" ? "?" : "\u0001";
-        });
-        // replace multiple character wildcard with unicode 0002
-        return str.replace(/(?:\\)*\*/g, val => {
-            return val.charAt(0) === "\\" ? "*" : "\u0002";
-        });
-    }
+	/**
+	 * Sets up the regular expression string to allow later insertion of
+	 * wildcard regular expression matches
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	setupWildcardsRegExp(str) {
+		// replace single character wildcard with unicode 0001
+		str = str.replace(/(?:\\)*\?/g, val => {
+			return val.charAt(0) === "\\" ? "?" : "\u0001";
+		});
+		// replace multiple character wildcard with unicode 0002
+		return str.replace(/(?:\\)*\*/g, val => {
+			return val.charAt(0) === "\\" ? "*" : "\u0002";
+		});
+	}
 
-    /**
-     * Sets up the regular expression string to allow later insertion of
-     * wildcard regular expression matches
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createWildcardsRegExp(str) {
-        // default to "enable" (i.e. to not include spaces)
-        // "withSpaces" uses `[\\S\\s]` instead of `.` because the latter
-        // does not match new line characters
-        let spaces = this.opt.wildcards === "withSpaces";
-        return str
-            // replace unicode 0001 with a RegExp class to match any single
-            // character, or any single non-whitespace character depending
-            // on the setting
-            .replace(/\u0001/g, spaces ? "[\\S\\s]?" : "\\S?")
-            // replace unicode 0002 with a RegExp class to match zero or
-            // more characters, or zero or more non-whitespace characters
-            // depending on the setting
-            .replace(/\u0002/g, spaces ? "[\\S\\s]*?" : "\\S*");
-    }
+	/**
+	 * Sets up the regular expression string to allow later insertion of
+	 * wildcard regular expression matches
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createWildcardsRegExp(str) {
+		// default to "enable" (i.e. to not include spaces)
+		// "withSpaces" uses `[\\S\\s]` instead of `.` because the latter
+		// does not match new line characters
+		let spaces = this.opt.wildcards === "withSpaces";
+		return str
+			// replace unicode 0001 with a RegExp class to match any single
+			// character, or any single non-whitespace character depending
+			// on the setting
+			.replace(/\u0001/g, spaces ? "[\\S\\s]?" : "\\S?")
+			// replace unicode 0002 with a RegExp class to match zero or
+			// more characters, or zero or more non-whitespace characters
+			// depending on the setting
+			.replace(/\u0002/g, spaces ? "[\\S\\s]*?" : "\\S*");
+	}
 
-    /**
-     * Sets up the regular expression string to allow later insertion of
-     * designated characters (soft hyphens & zero width characters)
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    setupIgnoreJoinersRegExp(str) {
-        // adding a "null" unicode character as it will not be modified by the
-        // other "create" regular expression functions
-        return str.replace(/[^(|)\\]/g, (val, indx, original) => {
-            // don't add a null after an opening "(", around a "|" or before
-            // a closing "(", or between an escapement (e.g. \+)
-            let nextChar = original.charAt(indx + 1);
-            if(/[(|)\\]/.test(nextChar) || nextChar === "") {
-                return val;
-            } else {
-                return val + "\u0000";
-            }
-        });
-    }
+	/**
+	 * Sets up the regular expression string to allow later insertion of
+	 * designated characters (soft hyphens & zero width characters)
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	setupIgnoreJoinersRegExp(str) {
+		// adding a "null" unicode character as it will not be modified by the
+		// other "create" regular expression functions
+		return str.replace(/[^(|)\\]/g, (val, indx, original) => {
+			// don't add a null after an opening "(", around a "|" or before
+			// a closing "(", or between an escapement (e.g. \+)
+			let nextChar = original.charAt(indx + 1);
+			if(/[(|)\\]/.test(nextChar) || nextChar === "") {
+				return val;
+			} else {
+				return val + "\u0000";
+			}
+		});
+	}
 
-    /**
-     * Creates a regular expression string to allow ignoring of
-     * designated characters (soft hyphens & zero width characters)
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createIgnoreJoinersRegExp(str) {
-        // u+00ad = soft hyphen
-        // u+200b = zero-width space
-        // u+200c = zero-width non-joiner
-        // u+200d = zero-width joiner
-        return str.split("\u0000").join("[\\u00ad|\\u200b|\\u200c|\\u200d]?");
-    }
+	/**
+	 * Creates a regular expression string to allow ignoring of
+	 * designated characters (soft hyphens & zero width characters)
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createIgnoreJoinersRegExp(str) {
+		// u+00ad = soft hyphen
+		// u+200b = zero-width space
+		// u+200c = zero-width non-joiner
+		// u+200d = zero-width joiner
+		return str.split("\u0000").join("[\\u00ad|\\u200b|\\u200c|\\u200d]?");
+	}
 
-    /**
-     * Creates a regular expression string to match diacritics
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createDiacriticsRegExp(str) {
-        const sens = this.opt.caseSensitive ? "" : "i",
-            dct = this.opt.caseSensitive ? [
-                "aàáâãäåāąă", "AÀÁÂÃÄÅĀĄĂ", "cçćč", "CÇĆČ", "dđď", "DĐĎ",
-                "eèéêëěēę", "EÈÉÊËĚĒĘ", "iìíîïī", "IÌÍÎÏĪ", "lł", "LŁ", "nñňń",
-                "NÑŇŃ", "oòóôõöøō", "OÒÓÔÕÖØŌ", "rř", "RŘ", "sšśșş", "SŠŚȘŞ",
-                "tťțţ", "TŤȚŢ", "uùúûüůū", "UÙÚÛÜŮŪ", "yÿý", "YŸÝ", "zžżź",
-                "ZŽŻŹ"
-            ] : [
-                "aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ", "cçćčCÇĆČ", "dđďDĐĎ",
-                "eèéêëěēęEÈÉÊËĚĒĘ", "iìíîïīIÌÍÎÏĪ", "lłLŁ", "nñňńNÑŇŃ",
-                "oòóôõöøōOÒÓÔÕÖØŌ", "rřRŘ", "sšśșşSŠŚȘŞ", "tťțţTŤȚŢ",
-                "uùúûüůūUÙÚÛÜŮŪ", "yÿýYŸÝ", "zžżźZŽŻŹ"
-            ];
-        let handled = [];
-        str.split("").forEach(ch => {
-            dct.every(dct => {
-                // Check if the character is inside a diacritics list
-                if(dct.indexOf(ch) !== -1) {
-                    // Check if the related diacritics list was not
-                    // handled yet
-                    if(handled.indexOf(dct) > -1) {
-                        return false;
-                    }
-                    // Make sure that the character OR any other
-                    // character in the diacritics list will be matched
-                    str = str.replace(
-                        new RegExp(`[${dct}]`, `gm${sens}`), `[${dct}]`
-                    );
-                    handled.push(dct);
-                }
-                return true;
-            });
-        });
-        return str;
-    }
+	/**
+	 * Creates a regular expression string to match diacritics
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createDiacriticsRegExp(str) {
+		const sens = this.opt.caseSensitive ? "" : "i",
+			dct = this.opt.caseSensitive ? [
+				"aàáâãäåāąă", "AÀÁÂÃÄÅĀĄĂ", "cçćč", "CÇĆČ", "dđď", "DĐĎ",
+				"eèéêëěēę", "EÈÉÊËĚĒĘ", "iìíîïī", "IÌÍÎÏĪ", "lł", "LŁ", "nñňń",
+				"NÑŇŃ", "oòóôõöøō", "OÒÓÔÕÖØŌ", "rř", "RŘ", "sšśșş", "SŠŚȘŞ",
+				"tťțţ", "TŤȚŢ", "uùúûüůū", "UÙÚÛÜŮŪ", "yÿý", "YŸÝ", "zžżź",
+				"ZŽŻŹ"
+			] : [
+				"aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ", "cçćčCÇĆČ", "dđďDĐĎ",
+				"eèéêëěēęEÈÉÊËĚĒĘ", "iìíîïīIÌÍÎÏĪ", "lłLŁ", "nñňńNÑŇŃ",
+				"oòóôõöøōOÒÓÔÕÖØŌ", "rřRŘ", "sšśșşSŠŚȘŞ", "tťțţTŤȚŢ",
+				"uùúûüůūUÙÚÛÜŮŪ", "yÿýYŸÝ", "zžżźZŽŻŹ"
+			];
+		let handled = [];
+		str.split("").forEach(ch => {
+			dct.every(dct => {
+				// Check if the character is inside a diacritics list
+				if(dct.indexOf(ch) !== -1) {
+					// Check if the related diacritics list was not
+					// handled yet
+					if(handled.indexOf(dct) > -1) {
+						return false;
+					}
+					// Make sure that the character OR any other
+					// character in the diacritics list will be matched
+					str = str.replace(
+						new RegExp(`[${dct}]`, `gm${sens}`), `[${dct}]`
+					);
+					handled.push(dct);
+				}
+				return true;
+			});
+		});
+		return str;
+	}
 
-    /**
-     * Creates a regular expression string that merges whitespace characters
-     * including subsequent ones into a single pattern, one or multiple
-     * whitespaces
-     * @param  {string} str - The search term to be used
-     * @return {string}
-     * @access protected
-     */
-    createMergedBlanksRegExp(str) {
-        return str.replace(/[\s]+/gmi, "[\\s]+");
-    }
+	/**
+	 * Creates a regular expression string that merges whitespace characters
+	 * including subsequent ones into a single pattern, one or multiple
+	 * whitespaces
+	 * @param  {string} str - The search term to be used
+	 * @return {string}
+	 * @access protected
+	 */
+	createMergedBlanksRegExp(str) {
+		return str.replace(/[\s]+/gmi, "[\\s]+");
+	}
 
-    /**
-     * Creates a regular expression string to match the specified string with
-     * the defined accuracy. As in the regular expression of "exactly" can be
-     * a group containing a blank at the beginning, all regular expressions will
-     * be created with two groups. The first group can be ignored (may contain
-     * the said blank), the second contains the actual match
-     * @param  {string} str - The searm term to be used
-     * @return {str}
-     * @access protected
-     */
-    createAccuracyRegExp(str) {
-        const chars = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~¡¿`;
-        let acc = this.opt.accuracy,
-            val = typeof acc === "string" ? acc : acc.value,
-            ls = typeof acc === "string" ? [] : acc.limiters,
-            lsJoin = "";
-        ls.forEach(limiter => {
-            lsJoin += `|${this.escapeStr(limiter)}`;
-        });
-        switch(val) {
-        case "partially":
-        default:
-            return `()(${str})`;
-        case "complementary":
-            lsJoin = "\\s" + (lsJoin ? lsJoin : this.escapeStr(chars));
-            return `()([^${lsJoin}]*${str}[^${lsJoin}]*)`;
-        case "exactly":
-            return `(^|\\s${lsJoin})(${str})(?=$|\\s${lsJoin})`;
-        }
-    }
+	/**
+	 * Creates a regular expression string to match the specified string with
+	 * the defined accuracy. As in the regular expression of "exactly" can be
+	 * a group containing a blank at the beginning, all regular expressions will
+	 * be created with two groups. The first group can be ignored (may contain
+	 * the said blank), the second contains the actual match
+	 * @param  {string} str - The searm term to be used
+	 * @return {str}
+	 * @access protected
+	 */
+	createAccuracyRegExp(str) {
+		const chars = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~¡¿`;
+		let acc = this.opt.accuracy,
+			val = typeof acc === "string" ? acc : acc.value,
+			ls = typeof acc === "string" ? [] : acc.limiters,
+			lsJoin = "";
+		ls.forEach(limiter => {
+			lsJoin += `|${this.escapeStr(limiter)}`;
+		});
+		switch(val) {
+		case "partially":
+		default:
+			return `()(${str})`;
+		case "complementary":
+			lsJoin = "\\s" + (lsJoin ? lsJoin : this.escapeStr(chars));
+			return `()([^${lsJoin}]*${str}[^${lsJoin}]*)`;
+		case "exactly":
+			return `(^|\\s${lsJoin})(${str})(?=$|\\s${lsJoin})`;
+		}
+	}
 
-    /**
-     * @typedef Mark~separatedKeywords
-     * @type {object.<string>}
-     * @property {array.<string>} keywords - The list of keywords
-     * @property {number} length - The length
-     */
-    /**
-     * Returns a list of keywords dependent on whether separate word search
-     * was defined. Also it filters empty keywords
-     * @param {array} sv - The array of keywords
-     * @return {Mark~separatedKeywords}
-     * @access protected
-     */
-    getSeparatedKeywords(sv) {
-        let stack = [];
-        sv.forEach(kw => {
-            if(!this.opt.separateWordSearch) {
-                if(kw.trim() && stack.indexOf(kw) === -1) {
-                    stack.push(kw);
-                }
-            } else {
-                kw.split(" ").forEach(kwSplitted => {
-                    if(kwSplitted.trim() && stack.indexOf(kwSplitted) === -1) {
-                        stack.push(kwSplitted);
-                    }
-                });
-            }
-        });
-        return {
-            // sort because of https://git.io/v6USg
-            "keywords": stack.sort((a, b) => {
-                return b.length - a.length;
-            }),
-            "length": stack.length
-        };
-    }
+	/**
+	 * @typedef Mark~separatedKeywords
+	 * @type {object.<string>}
+	 * @property {array.<string>} keywords - The list of keywords
+	 * @property {number} length - The length
+	 */
+	/**
+	 * Returns a list of keywords dependent on whether separate word search
+	 * was defined. Also it filters empty keywords
+	 * @param {array} sv - The array of keywords
+	 * @return {Mark~separatedKeywords}
+	 * @access protected
+	 */
+	getSeparatedKeywords(sv) {
+		let stack = [];
+		sv.forEach(kw => {
+			if(!this.opt.separateWordSearch) {
+				if(kw.trim() && stack.indexOf(kw) === -1) {
+					stack.push(kw);
+				}
+			} else {
+				kw.split(" ").forEach(kwSplitted => {
+					if(kwSplitted.trim() && stack.indexOf(kwSplitted) === -1) {
+						stack.push(kwSplitted);
+					}
+				});
+			}
+		});
+		return {
+			// sort because of https://git.io/v6USg
+			"keywords": stack.sort((a, b) => {
+				return b.length - a.length;
+			}),
+			"length": stack.length
+		};
+	}
 
-    /**
-     * @typedef Mark~getTextNodesDict
-     * @type {object.<string>}
-     * @property {string} value - The composite value of all text nodes
-     * @property {object[]} nodes - An array of objects
-     * @property {number} nodes.start - The start position within the composite
-     * value
-     * @property {number} nodes.end - The end position within the composite
-     * value
-     * @property {HTMLElement} nodes.node - The DOM text node element
-     */
-    /**
-     * Callback
-     * @callback Mark~getTextNodesCallback
-     * @param {Mark~getTextNodesDict}
-     */
-    /**
-     * Calls the callback with an object containing all text nodes (including
-     * iframe text nodes) with start and end positions and the composite value
-     * of them (string)
-     * @param {Mark~getTextNodesCallback} cb - Callback
-     * @access protected
-     */
-    getTextNodes(cb) {
-        let val = "",
-            nodes = [];
-        this.iterator.forEachNode(NodeFilter.SHOW_TEXT, node => {
-            nodes.push({
-                start: val.length,
-                end: (val += node.textContent).length,
-                node
-            });
-        }, node => {
-            if(this.matchesExclude(node.parentNode)) {
-                return NodeFilter.FILTER_REJECT;
-            } else {
-                return NodeFilter.FILTER_ACCEPT;
-            }
-        }, () => {
-            cb({
-                value: val,
-                nodes: nodes
-            });
-        });
-    }
+	/**
+	 * @typedef Mark~getTextNodesDict
+	 * @type {object.<string>}
+	 * @property {string} value - The composite value of all text nodes
+	 * @property {object[]} nodes - An array of objects
+	 * @property {number} nodes.start - The start position within the composite
+	 * value
+	 * @property {number} nodes.end - The end position within the composite
+	 * value
+	 * @property {HTMLElement} nodes.node - The DOM text node element
+	 */
+	/**
+	 * Callback
+	 * @callback Mark~getTextNodesCallback
+	 * @param {Mark~getTextNodesDict}
+	 */
+	/**
+	 * Calls the callback with an object containing all text nodes (including
+	 * iframe text nodes) with start and end positions and the composite value
+	 * of them (string)
+	 * @param {Mark~getTextNodesCallback} cb - Callback
+	 * @access protected
+	 */
+	getTextNodes(cb) {
+		let val = "",
+			nodes = [];
+		this.iterator.forEachNode(NodeFilter.SHOW_TEXT, node => {
+			nodes.push({
+				start: val.length,
+				end: (val += node.textContent).length,
+				node
+			});
+		}, node => {
+			if(this.matchesExclude(node.parentNode)) {
+				return NodeFilter.FILTER_REJECT;
+			} else {
+				return NodeFilter.FILTER_ACCEPT;
+			}
+		}, () => {
+			cb({
+				value: val,
+				nodes: nodes
+			});
+		});
+	}
 
-    /**
-     * Checks if an element matches any of the specified exclude selectors. Also
-     * it checks for elements in which no marks should be performed (e.g.
-     * script and style tags) and optionally already marked elements
-     * @param  {HTMLElement} el - The element to check
-     * @return {boolean}
-     * @access protected
-     */
-    matchesExclude(el) {
-        return DOMIterator.matches(el, this.opt.exclude.concat([
-            // ignores the elements itself, not their childrens (selector *)
-            "script", "style", "title", "head", "html"
-        ]));
-    }
+	/**
+	 * Checks if an element matches any of the specified exclude selectors. Also
+	 * it checks for elements in which no marks should be performed (e.g.
+	 * script and style tags) and optionally already marked elements
+	 * @param  {HTMLElement} el - The element to check
+	 * @return {boolean}
+	 * @access protected
+	 */
+	matchesExclude(el) {
+		return DOMIterator.matches(el, this.opt.exclude.concat([
+			// ignores the elements itself, not their childrens (selector *)
+			"script", "style", "title", "head", "html"
+		]));
+	}
 
-    /**
-     * Wraps the instance element and class around matches that fit the start
-     * and end positions within the node
-     * @param  {HTMLElement} node - The DOM text node
-     * @param  {number} start - The position where to start wrapping
-     * @param  {number} end - The position where to end wrapping
-     * @return {HTMLElement} Returns the splitted text node that will appear
-     * after the wrapped text node
-     * @access protected
-     */
-    wrapRangeInTextNode(node, start, end) {
-        const hEl = !this.opt.element ? "mark" : this.opt.element,
-            startNode = node.splitText(start),
-            ret = startNode.splitText(end - start);
-        let repl = document.createElement(hEl);
-        repl.setAttribute("data-markjs", "true");
-        if(this.opt.className) {
-            repl.setAttribute("class", this.opt.className);
-        }
-        repl.textContent = startNode.textContent;
-        startNode.parentNode.replaceChild(repl, startNode);
-        return ret;
-    }
+	/**
+	 * Wraps the instance element and class around matches that fit the start
+	 * and end positions within the node
+	 * @param  {HTMLElement} node - The DOM text node
+	 * @param  {number} start - The position where to start wrapping
+	 * @param  {number} end - The position where to end wrapping
+	 * @return {HTMLElement} Returns the splitted text node that will appear
+	 * after the wrapped text node
+	 * @access protected
+	 */
+	wrapRangeInTextNode(node, start, end) {
+		const hEl = !this.opt.element ? "mark" : this.opt.element,
+			startNode = node.splitText(start),
+			ret = startNode.splitText(end - start);
+		let repl = document.createElement(hEl);
+		repl.setAttribute("data-markjs", "true");
+		if(this.opt.className) {
+			repl.setAttribute("class", this.opt.className);
+		}
+		repl.textContent = startNode.textContent;
+		startNode.parentNode.replaceChild(repl, startNode);
+		return ret;
+	}
 
-    /**
-     * @typedef Mark~wrapRangeInMappedTextNodeDict
-     * @type {object.<string>}
-     * @property {string} value - The composite value of all text nodes
-     * @property {object[]} nodes - An array of objects
-     * @property {number} nodes.start - The start position within the composite
-     * value
-     * @property {number} nodes.end - The end position within the composite
-     * value
-     * @property {HTMLElement} nodes.node - The DOM text node element
-     */
-    /**
-     * Each callback
-     * @callback Mark~wrapMatchesEachCallback
-     * @param {HTMLElement} node - The wrapped DOM element
-     * @param {number} lastIndex - The last matching position within the
-     * composite value of text nodes
-     */
-    /**
-     * Filter callback
-     * @callback Mark~wrapMatchesFilterCallback
-     * @param {HTMLElement} node - The matching text node DOM element
-     */
-    /**
-     * Determines matches by start and end positions using the text node
-     * dictionary even across text nodes and calls
-     * {@link Mark#wrapRangeInTextNode} to wrap them
-     * @param  {Mark~wrapRangeInMappedTextNodeDict} dict - The dictionary
-     * @param  {number} start - The start position of the match
-     * @param  {number} end - The end position of the match
-     * @param  {Mark~wrapMatchesFilterCallback} filterCb - Filter callback
-     * @param  {Mark~wrapMatchesEachCallback} eachCb - Each callback
-     * @access protected
-     */
-    wrapRangeInMappedTextNode(dict, start, end, filterCb, eachCb) {
-        // iterate over all text nodes to find the one matching the positions
-        dict.nodes.every((n, i) => {
-            const sibl = dict.nodes[i + 1];
-            if(typeof sibl === "undefined" || sibl.start > start) {
-                if(!filterCb(n.node)) {
-                    return false;
-                }
-                // map range from dict.value to text node
-                const s = start - n.start,
-                    e = (end > n.end ? n.end : end) - n.start,
-                    startStr = dict.value.substr(0, n.start),
-                    endStr = dict.value.substr(e + n.start);
-                n.node = this.wrapRangeInTextNode(n.node, s, e);
-                // recalculate positions to also find subsequent matches in the
-                // same text node. Necessary as the text node in dict now only
-                // contains the splitted part after the wrapped one
-                dict.value = startStr + endStr;
-                dict.nodes.forEach((k, j) => {
-                    if(j >= i) {
-                        if(dict.nodes[j].start > 0 && j !== i) {
-                            dict.nodes[j].start -= e;
-                        }
-                        dict.nodes[j].end -= e;
-                    }
-                });
-                end -= e;
-                eachCb(n.node.previousSibling, n.start);
-                if(end > n.end) {
-                    start = n.end;
-                } else {
-                    return false;
-                }
-            }
-            return true;
-        });
-    }
+	/**
+	 * @typedef Mark~wrapRangeInMappedTextNodeDict
+	 * @type {object.<string>}
+	 * @property {string} value - The composite value of all text nodes
+	 * @property {object[]} nodes - An array of objects
+	 * @property {number} nodes.start - The start position within the composite
+	 * value
+	 * @property {number} nodes.end - The end position within the composite
+	 * value
+	 * @property {HTMLElement} nodes.node - The DOM text node element
+	 */
+	/**
+	 * Each callback
+	 * @callback Mark~wrapMatchesEachCallback
+	 * @param {HTMLElement} node - The wrapped DOM element
+	 * @param {number} lastIndex - The last matching position within the
+	 * composite value of text nodes
+	 */
+	/**
+	 * Filter callback
+	 * @callback Mark~wrapMatchesFilterCallback
+	 * @param {HTMLElement} node - The matching text node DOM element
+	 */
+	/**
+	 * Determines matches by start and end positions using the text node
+	 * dictionary even across text nodes and calls
+	 * {@link Mark#wrapRangeInTextNode} to wrap them
+	 * @param  {Mark~wrapRangeInMappedTextNodeDict} dict - The dictionary
+	 * @param  {number} start - The start position of the match
+	 * @param  {number} end - The end position of the match
+	 * @param  {Mark~wrapMatchesFilterCallback} filterCb - Filter callback
+	 * @param  {Mark~wrapMatchesEachCallback} eachCb - Each callback
+	 * @access protected
+	 */
+	wrapRangeInMappedTextNode(dict, start, end, filterCb, eachCb) {
+		// iterate over all text nodes to find the one matching the positions
+		dict.nodes.every((n, i) => {
+			const sibl = dict.nodes[i + 1];
+			if(typeof sibl === "undefined" || sibl.start > start) {
+				if(!filterCb(n.node)) {
+					return false;
+				}
+				// map range from dict.value to text node
+				const s = start - n.start,
+					e = (end > n.end ? n.end : end) - n.start,
+					startStr = dict.value.substr(0, n.start),
+					endStr = dict.value.substr(e + n.start);
+				n.node = this.wrapRangeInTextNode(n.node, s, e);
+				// recalculate positions to also find subsequent matches in the
+				// same text node. Necessary as the text node in dict now only
+				// contains the splitted part after the wrapped one
+				dict.value = startStr + endStr;
+				dict.nodes.forEach((k, j) => {
+					if(j >= i) {
+						if(dict.nodes[j].start > 0 && j !== i) {
+							dict.nodes[j].start -= e;
+						}
+						dict.nodes[j].end -= e;
+					}
+				});
+				end -= e;
+				eachCb(n.node.previousSibling, n.start);
+				if(end > n.end) {
+					start = n.end;
+				} else {
+					return false;
+				}
+			}
+			return true;
+		});
+	}
 
-    /**
-     * Filter callback before each wrapping
-     * @callback Mark~wrapMatchesFilterCallback
-     * @param {string} match - The matching string
-     * @param {HTMLElement} node - The text node where the match occurs
-     */
-    /**
-     * Callback for each wrapped element
-     * @callback Mark~wrapMatchesEachCallback
-     * @param {HTMLElement} element - The marked DOM element
-     */
-    /**
-     * Callback on end
-     * @callback Mark~wrapMatchesEndCallback
-     */
-    /**
-     * Wraps the instance element and class around matches within single HTML
-     * elements in all contexts
-     * @param {RegExp} regex - The regular expression to be searched for
-     * @param {number} ignoreGroups - A number indicating the amount of RegExp
-     * matching groups to ignore
-     * @param {Mark~wrapMatchesFilterCallback} filterCb
-     * @param {Mark~wrapMatchesEachCallback} eachCb
-     * @param {Mark~wrapMatchesEndCallback} endCb
-     * @access protected
-     */
-    wrapMatches(regex, ignoreGroups, filterCb, eachCb, endCb) {
-        const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
-        this.getTextNodes(dict => {
-            dict.nodes.forEach(node => {
-                node = node.node;
-                let match;
-                while(
-                    (match = regex.exec(node.textContent)) !== null &&
-                    match[matchIdx] !== ""
-                ) {
-                    if(!filterCb(match[matchIdx], node)) {
-                        continue;
-                    }
-                    let pos = match.index;
-                    if(matchIdx !== 0) {
-                        for(let i = 1; i < matchIdx; i++) {
-                            pos += match[i].length;
-                        }
-                    }
-                    node = this.wrapRangeInTextNode(
-                        node,
-                        pos,
-                        pos + match[matchIdx].length
-                    );
-                    eachCb(node.previousSibling);
-                    // reset index of last match as the node changed and the
-                    // index isn't valid anymore http://tinyurl.com/htsudjd
-                    regex.lastIndex = 0;
-                }
-            });
-            endCb();
-        });
-    }
+	/**
+	 * Filter callback before each wrapping
+	 * @callback Mark~wrapMatchesFilterCallback
+	 * @param {string} match - The matching string
+	 * @param {HTMLElement} node - The text node where the match occurs
+	 */
+	/**
+	 * Callback for each wrapped element
+	 * @callback Mark~wrapMatchesEachCallback
+	 * @param {HTMLElement} element - The marked DOM element
+	 */
+	/**
+	 * Callback on end
+	 * @callback Mark~wrapMatchesEndCallback
+	 */
+	/**
+	 * Wraps the instance element and class around matches within single HTML
+	 * elements in all contexts
+	 * @param {RegExp} regex - The regular expression to be searched for
+	 * @param {number} ignoreGroups - A number indicating the amount of RegExp
+	 * matching groups to ignore
+	 * @param {Mark~wrapMatchesFilterCallback} filterCb
+	 * @param {Mark~wrapMatchesEachCallback} eachCb
+	 * @param {Mark~wrapMatchesEndCallback} endCb
+	 * @access protected
+	 */
+	wrapMatches(regex, ignoreGroups, filterCb, eachCb, endCb) {
+		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
+		this.getTextNodes(dict => {
+			dict.nodes.forEach(node => {
+				node = node.node;
+				let match;
+				while(
+					(match = regex.exec(node.textContent)) !== null &&
+					match[matchIdx] !== ""
+				) {
+					if(!filterCb(match[matchIdx], node)) {
+						continue;
+					}
+					let pos = match.index;
+					if(matchIdx !== 0) {
+						for(let i = 1; i < matchIdx; i++) {
+							pos += match[i].length;
+						}
+					}
+					node = this.wrapRangeInTextNode(
+						node,
+						pos,
+						pos + match[matchIdx].length
+					);
+					eachCb(node.previousSibling);
+					// reset index of last match as the node changed and the
+					// index isn't valid anymore http://tinyurl.com/htsudjd
+					regex.lastIndex = 0;
+				}
+			});
+			endCb();
+		});
+	}
 
-    /**
-     * Callback for each wrapped element
-     * @callback Mark~wrapMatchesAcrossElementsEachCallback
-     * @param {HTMLElement} element - The marked DOM element
-     */
-    /**
-     * Filter callback before each wrapping
-     * @callback Mark~wrapMatchesAcrossElementsFilterCallback
-     * @param {string} match - The matching string
-     * @param {HTMLElement} node - The text node where the match occurs
-     */
-    /**
-     * Callback on end
-     * @callback Mark~wrapMatchesAcrossElementsEndCallback
-     */
-    /**
-     * Wraps the instance element and class around matches across all HTML
-     * elements in all contexts
-     * @param {RegExp} regex - The regular expression to be searched for
-     * @param {number} ignoreGroups - A number indicating the amount of RegExp
-     * matching groups to ignore
-     * @param {Mark~wrapMatchesAcrossElementsFilterCallback} filterCb
-     * @param {Mark~wrapMatchesAcrossElementsEachCallback} eachCb
-     * @param {Mark~wrapMatchesAcrossElementsEndCallback} endCb
-     * @access protected
-     */
-    wrapMatchesAcrossElements(regex, ignoreGroups, filterCb, eachCb, endCb) {
-        const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
-        this.getTextNodes(dict => {
-            let match;
-            while(
-                (match = regex.exec(dict.value)) !== null &&
-                match[matchIdx] !== ""
-            ) {
-                // calculate range inside dict.value
-                let start = match.index;
-                if(matchIdx !== 0) {
-                    for(let i = 1; i < matchIdx; i++) {
-                        start += match[i].length;
-                    }
-                }
-                const end = start + match[matchIdx].length;
-                // note that dict will be updated automatically, as it'll change
-                // in the wrapping process, due to the fact that text
-                // nodes will be splitted
-                this.wrapRangeInMappedTextNode(dict, start, end, node => {
-                    return filterCb(match[matchIdx], node);
-                }, (node, lastIndex) => {
-                    regex.lastIndex = lastIndex;
-                    eachCb(node);
-                });
-            }
-            endCb();
-        });
-    }
+	/**
+	 * Callback for each wrapped element
+	 * @callback Mark~wrapMatchesAcrossElementsEachCallback
+	 * @param {HTMLElement} element - The marked DOM element
+	 */
+	/**
+	 * Filter callback before each wrapping
+	 * @callback Mark~wrapMatchesAcrossElementsFilterCallback
+	 * @param {string} match - The matching string
+	 * @param {HTMLElement} node - The text node where the match occurs
+	 */
+	/**
+	 * Callback on end
+	 * @callback Mark~wrapMatchesAcrossElementsEndCallback
+	 */
+	/**
+	 * Wraps the instance element and class around matches across all HTML
+	 * elements in all contexts
+	 * @param {RegExp} regex - The regular expression to be searched for
+	 * @param {number} ignoreGroups - A number indicating the amount of RegExp
+	 * matching groups to ignore
+	 * @param {Mark~wrapMatchesAcrossElementsFilterCallback} filterCb
+	 * @param {Mark~wrapMatchesAcrossElementsEachCallback} eachCb
+	 * @param {Mark~wrapMatchesAcrossElementsEndCallback} endCb
+	 * @access protected
+	 */
+	wrapMatchesAcrossElements(regex, ignoreGroups, filterCb, eachCb, endCb) {
+		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
+		this.getTextNodes(dict => {
+			let match;
+			while(
+				(match = regex.exec(dict.value)) !== null &&
+				match[matchIdx] !== ""
+			) {
+				// calculate range inside dict.value
+				let start = match.index;
+				if(matchIdx !== 0) {
+					for(let i = 1; i < matchIdx; i++) {
+						start += match[i].length;
+					}
+				}
+				const end = start + match[matchIdx].length;
+				// note that dict will be updated automatically, as it'll change
+				// in the wrapping process, due to the fact that text
+				// nodes will be splitted
+				this.wrapRangeInMappedTextNode(dict, start, end, node => {
+					return filterCb(match[matchIdx], node);
+				}, (node, lastIndex) => {
+					regex.lastIndex = lastIndex;
+					eachCb(node);
+				});
+			}
+			endCb();
+		});
+	}
 
-    /**
-     * Unwraps the specified DOM node with its content (text nodes or HTML)
-     * without destroying possibly present events (using innerHTML) and
-     * normalizes the parent at the end (merge splitted text nodes)
-     * @param  {HTMLElement} node - The DOM node to unwrap
-     * @access protected
-     */
-    unwrapMatches(node) {
-        const parent = node.parentNode;
-        let docFrag = document.createDocumentFragment();
-        while(node.firstChild) {
-            docFrag.appendChild(node.removeChild(node.firstChild));
-        }
-        parent.replaceChild(docFrag, node);
-        if(!this.ie) { // use browser's normalize method
-            parent.normalize();
-        } else { // custom method (needs more time)
-            this.normalizeTextNode(parent);
-        }
-    }
+	/**
+	 * Unwraps the specified DOM node with its content (text nodes or HTML)
+	 * without destroying possibly present events (using innerHTML) and
+	 * normalizes the parent at the end (merge splitted text nodes)
+	 * @param  {HTMLElement} node - The DOM node to unwrap
+	 * @access protected
+	 */
+	unwrapMatches(node) {
+		const parent = node.parentNode;
+		let docFrag = document.createDocumentFragment();
+		while(node.firstChild) {
+			docFrag.appendChild(node.removeChild(node.firstChild));
+		}
+		parent.replaceChild(docFrag, node);
+		if(!this.ie) { // use browser's normalize method
+			parent.normalize();
+		} else { // custom method (needs more time)
+			this.normalizeTextNode(parent);
+		}
+	}
 
-    /**
-     * Normalizes text nodes. It's a workaround for the native normalize method
-     * that has a bug in IE (see attached link). Should only be used in IE
-     * browsers as it's slower than the native method.
-     * @see {@link http://tinyurl.com/z5asa8c}
-     * @param {HTMLElement} node - The DOM node to normalize
-     * @access protected
-     */
-    normalizeTextNode(node) {
-        if(!node) {
-            return;
-        }
-        if(node.nodeType === 3) {
-            while(node.nextSibling && node.nextSibling.nodeType === 3) {
-                node.nodeValue += node.nextSibling.nodeValue;
-                node.parentNode.removeChild(node.nextSibling);
-            }
-        } else {
-            this.normalizeTextNode(node.firstChild);
-        }
-        this.normalizeTextNode(node.nextSibling);
-    }
+	/**
+	 * Normalizes text nodes. It's a workaround for the native normalize method
+	 * that has a bug in IE (see attached link). Should only be used in IE
+	 * browsers as it's slower than the native method.
+	 * @see {@link http://tinyurl.com/z5asa8c}
+	 * @param {HTMLElement} node - The DOM node to normalize
+	 * @access protected
+	 */
+	normalizeTextNode(node) {
+		if(!node) {
+			return;
+		}
+		if(node.nodeType === 3) {
+			while(node.nextSibling && node.nextSibling.nodeType === 3) {
+				node.nodeValue += node.nextSibling.nodeValue;
+				node.parentNode.removeChild(node.nextSibling);
+			}
+		} else {
+			this.normalizeTextNode(node.firstChild);
+		}
+		this.normalizeTextNode(node.nextSibling);
+	}
 
-    /**
-     * Callback when finished
-     * @callback Mark~commonDoneCallback
-     * @param {number} totalMatches - The number of marked elements
-     */
-    /**
-     * @typedef Mark~commonOptions
-     * @type {object.<string>}
-     * @property {string} [element="mark"] - HTML element tag name
-     * @property {string} [className] - An optional class name
-     * @property {string[]} [exclude - An array with exclusion selectors.
-     * Elements matching those selectors will be ignored
-     * @property {boolean} [iframes=false] - Whether to search inside iframes
-     * @property {Mark~commonDoneCallback} [done]
-     * @property {boolean} [debug=false] - Wheter to log messages
-     * @property {object} [log=window.console] - Where to log messages (only if
-     * debug is true)
-     */
-    /**
-     * Callback for each marked element
-     * @callback Mark~markRegExpEachCallback
-     * @param {HTMLElement} element - The marked DOM element
-     */
-    /**
-     * Callback if there were no matches
-     * @callback Mark~markRegExpNoMatchCallback
-     * @param {RegExp} regexp - The regular expression
-     */
-    /**
-     * Callback to filter matches
-     * @callback Mark~markRegExpFilterCallback
-     * @param {HTMLElement} textNode - The text node which includes the match
-     * @param {string} match - The matching string for the RegExp
-     * @param {number} counter - A counter indicating the number of all marks
-     */
-    /**
-     * These options also include the common options from
-     * {@link Mark~commonOptions}
-     * @typedef Mark~markRegExpOptions
-     * @type {object.<string>}
-     * @property {Mark~markRegExpEachCallback} [each]
-     * @property {Mark~markRegExpNoMatchCallback} [noMatch]
-     * @property {Mark~markRegExpFilterCallback} [filter]
-     */
-    /**
-     * Marks a custom regular expression
-     * @param  {RegExp} regexp - The regular expression
-     * @param  {Mark~markRegExpOptions} [opt] - Optional options object
-     * @access public
-     */
-    markRegExp(regexp, opt) {
-        this.opt = opt;
-        this.log(`Searching with expression "${regexp}"`);
-        let totalMatches = 0,
-            fn = "wrapMatches";
-        const eachCb = element => {
-            totalMatches++;
-            this.opt.each(element);
-        };
-        if(this.opt.acrossElements) {
-            fn = "wrapMatchesAcrossElements";
-        }
-        this[fn](regexp, this.opt.ignoreGroups, (match, node) => {
-            return this.opt.filter(node, match, totalMatches);
-        }, eachCb, () => {
-            if(totalMatches === 0) {
-                this.opt.noMatch(regexp);
-            }
-            this.opt.done(totalMatches);
-        });
-    }
+	/**
+	 * Callback when finished
+	 * @callback Mark~commonDoneCallback
+	 * @param {number} totalMatches - The number of marked elements
+	 */
+	/**
+	 * @typedef Mark~commonOptions
+	 * @type {object.<string>}
+	 * @property {string} [element="mark"] - HTML element tag name
+	 * @property {string} [className] - An optional class name
+	 * @property {string[]} [exclude - An array with exclusion selectors.
+	 * Elements matching those selectors will be ignored
+	 * @property {boolean} [iframes=false] - Whether to search inside iframes
+	 * @property {Mark~commonDoneCallback} [done]
+	 * @property {boolean} [debug=false] - Wheter to log messages
+	 * @property {object} [log=window.console] - Where to log messages (only if
+	 * debug is true)
+	 */
+	/**
+	 * Callback for each marked element
+	 * @callback Mark~markRegExpEachCallback
+	 * @param {HTMLElement} element - The marked DOM element
+	 */
+	/**
+	 * Callback if there were no matches
+	 * @callback Mark~markRegExpNoMatchCallback
+	 * @param {RegExp} regexp - The regular expression
+	 */
+	/**
+	 * Callback to filter matches
+	 * @callback Mark~markRegExpFilterCallback
+	 * @param {HTMLElement} textNode - The text node which includes the match
+	 * @param {string} match - The matching string for the RegExp
+	 * @param {number} counter - A counter indicating the number of all marks
+	 */
+	/**
+	 * These options also include the common options from
+	 * {@link Mark~commonOptions}
+	 * @typedef Mark~markRegExpOptions
+	 * @type {object.<string>}
+	 * @property {Mark~markRegExpEachCallback} [each]
+	 * @property {Mark~markRegExpNoMatchCallback} [noMatch]
+	 * @property {Mark~markRegExpFilterCallback} [filter]
+	 */
+	/**
+	 * Marks a custom regular expression
+	 * @param  {RegExp} regexp - The regular expression
+	 * @param  {Mark~markRegExpOptions} [opt] - Optional options object
+	 * @access public
+	 */
+	markRegExp(regexp, opt) {
+		this.opt = opt;
+		this.log(`Searching with expression "${regexp}"`);
+		let totalMatches = 0,
+			fn = "wrapMatches";
+		const eachCb = element => {
+			totalMatches++;
+			this.opt.each(element);
+		};
+		if(this.opt.acrossElements) {
+			fn = "wrapMatchesAcrossElements";
+		}
+		this[fn](regexp, this.opt.ignoreGroups, (match, node) => {
+			return this.opt.filter(node, match, totalMatches);
+		}, eachCb, () => {
+			if(totalMatches === 0) {
+				this.opt.noMatch(regexp);
+			}
+			this.opt.done(totalMatches);
+		});
+	}
 
-    /**
-     * Callback for each marked element
-     * @callback Mark~markEachCallback
-     * @param {HTMLElement} element - The marked DOM element
-     */
-    /**
-     * Callback if there were no matches
-     * @callback Mark~markNoMatchCallback
-     * @param {RegExp} term - The search term that was not found
-     */
-    /**
-     * Callback to filter matches
-     * @callback Mark~markFilterCallback
-     * @param {HTMLElement} textNode - The text node which includes the match
-     * @param {string} match - The matching term
-     * @param {number} totalCounter - A counter indicating the number of all
-     * marks
-     * @param {number} termCounter - A counter indicating the number of marks
-     * for the specific match
-     */
-    /**
-     * @typedef Mark~markAccuracyObject
-     * @type {object.<string>}
-     * @property {string} value - A accuracy string value
-     * @property {string[]} limiters - A custom array of limiters. For example
-     * <code>["-", ","]</code>
-     */
-    /**
-     * @typedef Mark~markAccuracySetting
-     * @type {string}
-     * @property {"partially"|"complementary"|"exactly"|Mark~markAccuracyObject}
-     * [accuracy="partially"] - Either one of the following string values:
-     * <ul>
-     *   <li><i>partially</i>: When searching for "lor" only "lor" inside
-     *   "lorem" will be marked</li>
-     *   <li><i>complementary</i>: When searching for "lor" the whole word
-     *   "lorem" will be marked</li>
-     *   <li><i>exactly</i>: When searching for "lor" only those exact words
-     *   will be marked. In this example nothing inside "lorem". This value
-     *   is equivalent to the previous option <i>wordBoundary</i></li>
-     * </ul>
-     * Or an object containing two properties:
-     * <ul>
-     *   <li><i>value</i>: One of the above named string values</li>
-     *   <li><i>limiters</i>: A custom array of string limiters for accuracy
-     *   "exactly" or "complementary"</li>
-     * </ul>
-     */
-    /**
-     * @typedef Mark~markWildcardsSetting
-     * @type {string}
-     * @property {"disabled"|"enabled"|"withSpaces"}
-     * [wildcards="disabled"] - Set to any of the following string values:
-     * <ul>
-     *   <li><i>disabled</i>: Disable wildcard usage</li>
-     *   <li><i>enabled</i>: When searching for "lor?m", the "?" will match zero
-     *   or one non-space character (e.g. "lorm", "loram", "lor3m", etc). When
-     *   searching for "lor*m", the "*" will match zero or more non-space
-     *   characters (e.g. "lorm", "loram", "lor123m", etc).</li>
-     *   <li><i>withSpaces</i>: When searching for "lor?m", the "?" will
-     *   match zero or one space or non-space character (e.g. "lor m", "loram",
-     *   etc). When searching for "lor*m", the "*" will match zero or more space
-     *   or non-space characters (e.g. "lorm", "lore et dolor ipsum", "lor: m",
-     *   etc).</li>
-     * </ul>
-     */
-    /**
-     * These options also include the common options from
-     * {@link Mark~commonOptions}
-     * @typedef Mark~markOptions
-     * @type {object.<string>}
-     * @property {boolean} [separateWordSearch=true] - Whether to search for
-     * each word separated by a blank instead of the complete term
-     * @property {boolean} [diacritics=true] - If diacritic characters should be
-     * matched. ({@link https://en.wikipedia.org/wiki/Diacritic Diacritics})
-     * @property {object} [synonyms] - An object with synonyms. The key will be
-     * a synonym for the value and the value for the key
-     * @property {Mark~markAccuracySetting} [accuracy]
-     * @property {Mark~markWildcardsSetting} [wildcards]
-     * @property {boolean} [acrossElements=false] - Whether to find matches
-     * across HTML elements. By default, only matches within single HTML
-     * elements will be found
-     * @property {Mark~markEachCallback} [each]
-     * @property {Mark~markNoMatchCallback} [noMatch]
-     * @property {Mark~markFilterCallback} [filter]
-     */
-    /**
-     * Marks the specified search terms
-     * @param {string|string[]} [sv] - Search value, either a search string or
-     * an array containing multiple search strings
-     * @param  {Mark~markOptions} [opt] - Optional options object
-     * @access public
-     */
-    mark(sv, opt) {
-        this.opt = opt;
-        let totalMatches = 0,
-            fn = "wrapMatches";
+	/**
+	 * Callback for each marked element
+	 * @callback Mark~markEachCallback
+	 * @param {HTMLElement} element - The marked DOM element
+	 */
+	/**
+	 * Callback if there were no matches
+	 * @callback Mark~markNoMatchCallback
+	 * @param {RegExp} term - The search term that was not found
+	 */
+	/**
+	 * Callback to filter matches
+	 * @callback Mark~markFilterCallback
+	 * @param {HTMLElement} textNode - The text node which includes the match
+	 * @param {string} match - The matching term
+	 * @param {number} totalCounter - A counter indicating the number of all
+	 * marks
+	 * @param {number} termCounter - A counter indicating the number of marks
+	 * for the specific match
+	 */
+	/**
+	 * @typedef Mark~markAccuracyObject
+	 * @type {object.<string>}
+	 * @property {string} value - A accuracy string value
+	 * @property {string[]} limiters - A custom array of limiters. For example
+	 * <code>["-", ","]</code>
+	 */
+	/**
+	 * @typedef Mark~markAccuracySetting
+	 * @type {string}
+	 * @property {"partially"|"complementary"|"exactly"|Mark~markAccuracyObject}
+	 * [accuracy="partially"] - Either one of the following string values:
+	 * <ul>
+	 *   <li><i>partially</i>: When searching for "lor" only "lor" inside
+	 *   "lorem" will be marked</li>
+	 *   <li><i>complementary</i>: When searching for "lor" the whole word
+	 *   "lorem" will be marked</li>
+	 *   <li><i>exactly</i>: When searching for "lor" only those exact words
+	 *   will be marked. In this example nothing inside "lorem". This value
+	 *   is equivalent to the previous option <i>wordBoundary</i></li>
+	 * </ul>
+	 * Or an object containing two properties:
+	 * <ul>
+	 *   <li><i>value</i>: One of the above named string values</li>
+	 *   <li><i>limiters</i>: A custom array of string limiters for accuracy
+	 *   "exactly" or "complementary"</li>
+	 * </ul>
+	 */
+	/**
+	 * @typedef Mark~markWildcardsSetting
+	 * @type {string}
+	 * @property {"disabled"|"enabled"|"withSpaces"}
+	 * [wildcards="disabled"] - Set to any of the following string values:
+	 * <ul>
+	 *   <li><i>disabled</i>: Disable wildcard usage</li>
+	 *   <li><i>enabled</i>: When searching for "lor?m", the "?" will match zero
+	 *   or one non-space character (e.g. "lorm", "loram", "lor3m", etc). When
+	 *   searching for "lor*m", the "*" will match zero or more non-space
+	 *   characters (e.g. "lorm", "loram", "lor123m", etc).</li>
+	 *   <li><i>withSpaces</i>: When searching for "lor?m", the "?" will
+	 *   match zero or one space or non-space character (e.g. "lor m", "loram",
+	 *   etc). When searching for "lor*m", the "*" will match zero or more space
+	 *   or non-space characters (e.g. "lorm", "lore et dolor ipsum", "lor: m",
+	 *   etc).</li>
+	 * </ul>
+	 */
+	/**
+	 * These options also include the common options from
+	 * {@link Mark~commonOptions}
+	 * @typedef Mark~markOptions
+	 * @type {object.<string>}
+	 * @property {boolean} [separateWordSearch=true] - Whether to search for
+	 * each word separated by a blank instead of the complete term
+	 * @property {boolean} [diacritics=true] - If diacritic characters should be
+	 * matched. ({@link https://en.wikipedia.org/wiki/Diacritic Diacritics})
+	 * @property {object} [synonyms] - An object with synonyms. The key will be
+	 * a synonym for the value and the value for the key
+	 * @property {Mark~markAccuracySetting} [accuracy]
+	 * @property {Mark~markWildcardsSetting} [wildcards]
+	 * @property {boolean} [acrossElements=false] - Whether to find matches
+	 * across HTML elements. By default, only matches within single HTML
+	 * elements will be found
+	 * @property {Mark~markEachCallback} [each]
+	 * @property {Mark~markNoMatchCallback} [noMatch]
+	 * @property {Mark~markFilterCallback} [filter]
+	 */
+	/**
+	 * Marks the specified search terms
+	 * @param {string|string[]} [sv] - Search value, either a search string or
+	 * an array containing multiple search strings
+	 * @param  {Mark~markOptions} [opt] - Optional options object
+	 * @access public
+	 */
+	mark(sv, opt) {
+		this.opt = opt;
+		let totalMatches = 0,
+			fn = "wrapMatches";
 
-        const {
-            keywords: kwArr,
-            length: kwArrLen
-        } = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv),
-            sens = this.opt.caseSensitive ? "" : "i",
-            handler = kw => { // async function calls as iframes are async too
-                let regex = new RegExp(this.createRegExp(kw), `gm${sens}`),
-                    matches = 0;
-                this.log(`Searching with expression "${regex}"`);
-                this[fn](regex, 1, (term, node) => {
-                    return this.opt.filter(node, kw, totalMatches, matches);
-                }, element => {
-                    matches++;
-                    totalMatches++;
-                    this.opt.each(element);
-                }, () => {
-                    if(matches === 0) {
-                        this.opt.noMatch(kw);
-                    }
-                    if(kwArr[kwArrLen - 1] === kw) {
-                        this.opt.done(totalMatches);
-                    } else {
-                        handler(kwArr[kwArr.indexOf(kw) + 1]);
-                    }
-                });
-            };
-        if(this.opt.acrossElements) {
-            fn = "wrapMatchesAcrossElements";
-        }
-        if(kwArrLen === 0) {
-            this.opt.done(totalMatches);
-        } else {
-            handler(kwArr[0]);
-        }
-    }
+		const {
+			keywords: kwArr,
+			length: kwArrLen
+		} = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv),
+			sens = this.opt.caseSensitive ? "" : "i",
+			handler = kw => { // async function calls as iframes are async too
+				let regex = new RegExp(this.createRegExp(kw), `gm${sens}`),
+					matches = 0;
+				this.log(`Searching with expression "${regex}"`);
+				this[fn](regex, 1, (term, node) => {
+					return this.opt.filter(node, kw, totalMatches, matches);
+				}, element => {
+					matches++;
+					totalMatches++;
+					this.opt.each(element);
+				}, () => {
+					if(matches === 0) {
+						this.opt.noMatch(kw);
+					}
+					if(kwArr[kwArrLen - 1] === kw) {
+						this.opt.done(totalMatches);
+					} else {
+						handler(kwArr[kwArr.indexOf(kw) + 1]);
+					}
+				});
+			};
+		if(this.opt.acrossElements) {
+			fn = "wrapMatchesAcrossElements";
+		}
+		if(kwArrLen === 0) {
+			this.opt.done(totalMatches);
+		} else {
+			handler(kwArr[0]);
+		}
+	}
 
-    /**
-     * Removes all marked elements inside the context with their HTML and
-     * normalizes the parent at the end
-     * @param  {Mark~commonOptions} [opt] - Optional options object
-     * @access public
-     */
-    unmark(opt) {
-        this.opt = opt;
-        let sel = this.opt.element ? this.opt.element : "*";
-        sel += "[data-markjs]";
-        if(this.opt.className) {
-            sel += `.${this.opt.className}`;
-        }
-        this.log(`Removal selector "${sel}"`);
-        this.iterator.forEachNode(NodeFilter.SHOW_ELEMENT, node => {
-            this.unwrapMatches(node);
-        }, node => {
-            const matchesSel = DOMIterator.matches(node, sel),
-                matchesExclude = this.matchesExclude(node);
-            if(!matchesSel || matchesExclude) {
-                return NodeFilter.FILTER_REJECT;
-            } else {
-                return NodeFilter.FILTER_ACCEPT;
-            }
-        }, this.opt.done);
-    }
+	/**
+	 * Removes all marked elements inside the context with their HTML and
+	 * normalizes the parent at the end
+	 * @param  {Mark~commonOptions} [opt] - Optional options object
+	 * @access public
+	 */
+	unmark(opt) {
+		this.opt = opt;
+		let sel = this.opt.element ? this.opt.element : "*";
+		sel += "[data-markjs]";
+		if(this.opt.className) {
+			sel += `.${this.opt.className}`;
+		}
+		this.log(`Removal selector "${sel}"`);
+		this.iterator.forEachNode(NodeFilter.SHOW_ELEMENT, node => {
+			this.unwrapMatches(node);
+		}, node => {
+			const matchesSel = DOMIterator.matches(node, sel),
+				matchesExclude = this.matchesExclude(node);
+			if(!matchesSel || matchesExclude) {
+				return NodeFilter.FILTER_REJECT;
+			} else {
+				return NodeFilter.FILTER_ACCEPT;
+			}
+		}, this.opt.done);
+	}
 }
 
 /**
@@ -956,219 +956,219 @@ class Mark { // eslint-disable-line no-unused-vars
  * @todo Outsource into separate repository and include it in the build
  */
 class DOMIterator {
-    private ctx;
-    private exclude;
+	private ctx;
+	private exclude;
 
-    /**
-     * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
-     * element, an array of DOM elements, a NodeList or a selector
-     * @param {string[]} [exclude=[]] - An array containing exclusion selectors
-     * for iframes
-     * @param {number} [iframesTimeout=5000] - A number indicating the ms to
-     * wait before an iframe should be skipped, in case the load event isn't
-     * fired. This also applies if the user is offline and the resource of the
-     * iframe is online (either by the browsers "offline" mode or because
-     * there's no internet connection)
-     */
-    constructor(ctx, exclude = []) {
-        /**
-         * The context of the instance. Either a DOM element, an array of DOM
-         * elements, a NodeList or a selector
-         * @type {HTMLElement|HTMLElement[]|NodeList|string}
-         * @access protected
-         */
-        this.ctx = ctx;
-        /**
-         * An array containing exclusion selectors for iframes
-         * @type {string[]}
-         */
-        this.exclude = exclude;
-    }
+	/**
+	 * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
+	 * element, an array of DOM elements, a NodeList or a selector
+	 * @param {string[]} [exclude=[]] - An array containing exclusion selectors
+	 * for iframes
+	 * @param {number} [iframesTimeout=5000] - A number indicating the ms to
+	 * wait before an iframe should be skipped, in case the load event isn't
+	 * fired. This also applies if the user is offline and the resource of the
+	 * iframe is online (either by the browsers "offline" mode or because
+	 * there's no internet connection)
+	 */
+	constructor(ctx, exclude = []) {
+		/**
+		 * The context of the instance. Either a DOM element, an array of DOM
+		 * elements, a NodeList or a selector
+		 * @type {HTMLElement|HTMLElement[]|NodeList|string}
+		 * @access protected
+		 */
+		this.ctx = ctx;
+		/**
+		 * An array containing exclusion selectors for iframes
+		 * @type {string[]}
+		 */
+		this.exclude = exclude;
+	}
 
-    /**
-     * Checks if the specified DOM element matches the selector
-     * @param  {HTMLElement} element - The DOM element
-     * @param  {string|string[]} selector - The selector or an array with
-     * selectors
-     * @return {boolean}
-     * @access public
-     */
-    static matches(element, selector) {
-        const selectors = typeof selector === "string" ? [selector] : selector,
-            fn = (
-                element.matches ||
-                element.matchesSelector ||
-                element.msMatchesSelector ||
-                element.mozMatchesSelector ||
-                element.oMatchesSelector ||
-                element.webkitMatchesSelector
-            );
-        if(fn) {
-            let match = false;
-            selectors.every(sel => {
-                if(fn.call(element, sel)) {
-                    match = true;
-                    return false;
-                }
-                return true;
-            });
-            return match;
-        } else { // may be false e.g. when el is a textNode
-            return false;
-        }
-    }
+	/**
+	 * Checks if the specified DOM element matches the selector
+	 * @param  {HTMLElement} element - The DOM element
+	 * @param  {string|string[]} selector - The selector or an array with
+	 * selectors
+	 * @return {boolean}
+	 * @access public
+	 */
+	static matches(element, selector) {
+		const selectors = typeof selector === "string" ? [selector] : selector,
+			fn = (
+				element.matches ||
+				element.matchesSelector ||
+				element.msMatchesSelector ||
+				element.mozMatchesSelector ||
+				element.oMatchesSelector ||
+				element.webkitMatchesSelector
+			);
+		if(fn) {
+			let match = false;
+			selectors.every(sel => {
+				if(fn.call(element, sel)) {
+					match = true;
+					return false;
+				}
+				return true;
+			});
+			return match;
+		} else { // may be false e.g. when el is a textNode
+			return false;
+		}
+	}
 
-    /**
-     * Returns all contexts filtered by duplicates (even nested)
-     * @return {HTMLElement[]} - An array containing DOM contexts
-     * @access protected
-     */
-    getContexts() {
-        let ctx,
-            filteredCtx = [];
-        if(typeof this.ctx === "undefined" || !this.ctx) { // e.g. null
-            ctx = [];
-        } else if(NodeList.prototype.isPrototypeOf(this.ctx)) {
-            ctx = Array.prototype.slice.call(this.ctx);
-        } else if(Array.isArray(this.ctx)) {
-            ctx = this.ctx;
-        } else if(typeof this.ctx === "string") {
-            ctx = Array.prototype.slice.call(
-                document.querySelectorAll(this.ctx)
-            );
-        } else { // e.g. HTMLElement or element inside iframe
-            ctx = [this.ctx];
-        }
-        // filter duplicate text nodes
-        ctx.forEach(ctx => {
-            const isDescendant = filteredCtx.filter(contexts => {
-                return contexts.contains(ctx);
-            }).length > 0;
-            if(filteredCtx.indexOf(ctx) === -1 && !isDescendant) {
-                filteredCtx.push(ctx);
-            }
-        });
-        return filteredCtx;
-    }
+	/**
+	 * Returns all contexts filtered by duplicates (even nested)
+	 * @return {HTMLElement[]} - An array containing DOM contexts
+	 * @access protected
+	 */
+	getContexts() {
+		let ctx,
+			filteredCtx = [];
+		if(typeof this.ctx === "undefined" || !this.ctx) { // e.g. null
+			ctx = [];
+		} else if(NodeList.prototype.isPrototypeOf(this.ctx)) {
+			ctx = Array.prototype.slice.call(this.ctx);
+		} else if(Array.isArray(this.ctx)) {
+			ctx = this.ctx;
+		} else if(typeof this.ctx === "string") {
+			ctx = Array.prototype.slice.call(
+				document.querySelectorAll(this.ctx)
+			);
+		} else { // e.g. HTMLElement or element inside iframe
+			ctx = [this.ctx];
+		}
+		// filter duplicate text nodes
+		ctx.forEach(ctx => {
+			const isDescendant = filteredCtx.filter(contexts => {
+				return contexts.contains(ctx);
+			}).length > 0;
+			if(filteredCtx.indexOf(ctx) === -1 && !isDescendant) {
+				filteredCtx.push(ctx);
+			}
+		});
+		return filteredCtx;
+	}
 
-    /**
-     * Creates a NodeIterator on the specified context
-     * @see {@link https://developer.mozilla.org/en/docs/Web/API/NodeIterator}
-     * @param {HTMLElement} ctx - The context DOM element
-     * @param {DOMIterator~whatToShow} whatToShow
-     * @param {DOMIterator~filterCb} filter
-     * @return {NodeIterator}
-     * @access protected
-     */
-    createIterator(ctx, whatToShow, filter) {
-        return document.createNodeIterator(ctx, whatToShow, filter, false);
-    }
+	/**
+	 * Creates a NodeIterator on the specified context
+	 * @see {@link https://developer.mozilla.org/en/docs/Web/API/NodeIterator}
+	 * @param {HTMLElement} ctx - The context DOM element
+	 * @param {DOMIterator~whatToShow} whatToShow
+	 * @param {DOMIterator~filterCb} filter
+	 * @return {NodeIterator}
+	 * @access protected
+	 */
+	createIterator(ctx, whatToShow, filter) {
+		return document.createNodeIterator(ctx, whatToShow, filter, false);
+	}
 
-    /**
-     * @typedef {DOMIterator~getIteratorNodeReturn}
-     * @type {object.<string>}
-     * @property {HTMLElement} prevNode - The previous node or null if there is
-     * no
-     * @property {HTMLElement} node - The current node
-     */
-    /**
-     * Returns the previous and current node of the specified iterator
-     * @param {NodeIterator} itr - The iterator
-     * @return {DOMIterator~getIteratorNodeReturn}
-     * @access protected
-     */
-    getIteratorNode(itr) {
-        const prevNode = itr.previousNode();
-        let node;
-        if(prevNode === null) {
-            node = itr.nextNode();
-        } else {
-            node = itr.nextNode() && itr.nextNode();
-        }
-        return {
-            prevNode,
-            node
-        };
-    }
+	/**
+	 * @typedef {DOMIterator~getIteratorNodeReturn}
+	 * @type {object.<string>}
+	 * @property {HTMLElement} prevNode - The previous node or null if there is
+	 * no
+	 * @property {HTMLElement} node - The current node
+	 */
+	/**
+	 * Returns the previous and current node of the specified iterator
+	 * @param {NodeIterator} itr - The iterator
+	 * @return {DOMIterator~getIteratorNodeReturn}
+	 * @access protected
+	 */
+	getIteratorNode(itr) {
+		const prevNode = itr.previousNode();
+		let node;
+		if(prevNode === null) {
+			node = itr.nextNode();
+		} else {
+			node = itr.nextNode() && itr.nextNode();
+		}
+		return {
+			prevNode,
+			node
+		};
+	}
 
-    /**
-     * Iterates through all nodes in the specified context and handles iframe
-     * nodes at the correct position
-     * @param {DOMIterator~whatToShow} whatToShow
-     * @param {HTMLElement} ctx - The context
-     * @param  {DOMIterator~forEachNodeCallback} eachCb - Each callback
-     * @param {DOMIterator~filterCb} filterCb - Filter callback
-     * @param {DOMIterator~forEachNodeEndCallback} doneCb - End callback
-     * @access protected
-     */
-    iterateThroughNodes(whatToShow, ctx, eachCb, filterCb, doneCb) {
-        const itr = this.createIterator(ctx, whatToShow, filterCb);
-        let ifr = [],
-            elements = [],
-            node, prevNode, retrieveNodes = () => {
-                ({
-                    prevNode,
-                    node
-                } = this.getIteratorNode(itr));
-                return node;
-            };
-        while(retrieveNodes()) {
-            // it's faster to call the each callback in an array loop
-            // than in this while loop
-            elements.push(node);
-        }
-        elements.forEach(node => {
-            eachCb(node);
-        });
+	/**
+	 * Iterates through all nodes in the specified context and handles iframe
+	 * nodes at the correct position
+	 * @param {DOMIterator~whatToShow} whatToShow
+	 * @param {HTMLElement} ctx - The context
+	 * @param  {DOMIterator~forEachNodeCallback} eachCb - Each callback
+	 * @param {DOMIterator~filterCb} filterCb - Filter callback
+	 * @param {DOMIterator~forEachNodeEndCallback} doneCb - End callback
+	 * @access protected
+	 */
+	iterateThroughNodes(whatToShow, ctx, eachCb, filterCb, doneCb) {
+		const itr = this.createIterator(ctx, whatToShow, filterCb);
+		let ifr = [],
+			elements = [],
+			node, prevNode, retrieveNodes = () => {
+				({
+					prevNode,
+					node
+				} = this.getIteratorNode(itr));
+				return node;
+			};
+		while(retrieveNodes()) {
+			// it's faster to call the each callback in an array loop
+			// than in this while loop
+			elements.push(node);
+		}
+		elements.forEach(node => {
+			eachCb(node);
+		});
 
-        doneCb();
-    }
+		doneCb();
+	}
 
-    /**
-     * Callback for each node
-     * @callback DOMIterator~forEachNodeCallback
-     * @param {HTMLElement} node - The DOM text node element
-     */
-    /**
-     * Callback if all contexts were handled
-     * @callback DOMIterator~forEachNodeEndCallback
-     */
-    /**
-     * Iterates over all contexts and initializes
-     * {@link DOMIterator#iterateThroughNodes iterateThroughNodes} on them
-     * @param {DOMIterator~whatToShow} whatToShow
-     * @param  {DOMIterator~forEachNodeCallback} each - Each callback
-     * @param {DOMIterator~filterCb} filter - Filter callback
-     * @param {DOMIterator~forEachNodeEndCallback} done - End callback
-     * @access public
-     */
-    forEachNode(whatToShow, each, filter, done = () => {}) {
-        const contexts = this.getContexts();
-        let open = contexts.length;
-        if(!open) {
-            done();
-        }
-        contexts.forEach(ctx => {
-            this.iterateThroughNodes(whatToShow, ctx, each, filter, () => {
-                if(--open <= 0) { // call end all contexts were handled
-                    done();
-                }
-            });
-        });
-    }
+	/**
+	 * Callback for each node
+	 * @callback DOMIterator~forEachNodeCallback
+	 * @param {HTMLElement} node - The DOM text node element
+	 */
+	/**
+	 * Callback if all contexts were handled
+	 * @callback DOMIterator~forEachNodeEndCallback
+	 */
+	/**
+	 * Iterates over all contexts and initializes
+	 * {@link DOMIterator#iterateThroughNodes iterateThroughNodes} on them
+	 * @param {DOMIterator~whatToShow} whatToShow
+	 * @param  {DOMIterator~forEachNodeCallback} each - Each callback
+	 * @param {DOMIterator~filterCb} filter - Filter callback
+	 * @param {DOMIterator~forEachNodeEndCallback} done - End callback
+	 * @access public
+	 */
+	forEachNode(whatToShow, each, filter, done = () => {}) {
+		const contexts = this.getContexts();
+		let open = contexts.length;
+		if(!open) {
+			done();
+		}
+		contexts.forEach(ctx => {
+			this.iterateThroughNodes(whatToShow, ctx, each, filter, () => {
+				if(--open <= 0) { // call end all contexts were handled
+					done();
+				}
+			});
+		});
+	}
 
-    /**
-     * Callback to filter nodes. Can return e.g. NodeFilter.FILTER_ACCEPT or
-     * NodeFilter.FILTER_REJECT
-     * @see {@link http://tinyurl.com/zdczmm2}
-     * @callback DOMIterator~filterCb
-     * @param {HTMLElement} node - The node to filter
-     */
-    /**
-     * @typedef DOMIterator~whatToShow
-     * @see {@link http://tinyurl.com/zfqqkx2}
-     * @type {number}
-     */
+	/**
+	 * Callback to filter nodes. Can return e.g. NodeFilter.FILTER_ACCEPT or
+	 * NodeFilter.FILTER_REJECT
+	 * @see {@link http://tinyurl.com/zdczmm2}
+	 * @callback DOMIterator~filterCb
+	 * @param {HTMLElement} node - The node to filter
+	 */
+	/**
+	 * @typedef DOMIterator~whatToShow
+	 * @see {@link http://tinyurl.com/zfqqkx2}
+	 * @type {number}
+	 */
 }
 
 export default Mark;
