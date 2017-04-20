@@ -1,9 +1,10 @@
 {
   "name": "mark.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "build/index.js",
   "scripts": {
+    "bump": "hi-bump",
     "start": "tsc",
     "watch": "tsc -w"
   },
@@ -18,6 +19,7 @@
   },
   "homepage": "https://github.com/Gijsjan/mark.js#readme",
   "devDependencies": {
+    "hi-bump": "^1.1.1",
     "typescript": "^2.2.2"
   }
 }
