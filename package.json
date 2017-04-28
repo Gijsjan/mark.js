@@ -1,6 +1,6 @@
 {
   "name": "mark.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "build/index.js",
   "scripts": {
@@ -22,6 +22,5 @@
     "hi-bump": "^1.1.1",
     "typescript": "^2.2.2"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
