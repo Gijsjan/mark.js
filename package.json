@@ -21,5 +21,7 @@
   "devDependencies": {
     "hi-bump": "^1.1.1",
     "typescript": "^2.2.2"
+  },
+  "dependencies": {
   }
 }
