@@ -1,9 +1,3 @@
-/*!***************************************************
- * mark.js v8.9.0
- * https://github.com/julmot/mark.js
- * Copyright (c) 2014–2017, Julian Motz
- * Released under the MIT license https://git.io/vwTVl
- *****************************************************/
 declare class Mark {
     private ctx;
     private ie;

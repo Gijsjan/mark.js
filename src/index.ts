@@ -1,40 +1,13 @@
-/*!***************************************************
- * mark.js v8.9.0
- * https://github.com/julmot/mark.js
- * Copyright (c) 2014–2017, Julian Motz
- * Released under the MIT license https://git.io/vwTVl
- *****************************************************/
-/**
- * Marks search terms in DOM elements
- * @example
- * new Mark(document.querySelector(".context")).mark("lorem ipsum");
- * @example
- * new Mark(document.querySelector(".context")).markRegExp(/lorem/gmi);
- */
 class Mark { // eslint-disable-line no-unused-vars
 	private ctx;
 	private ie;
 	private _opt;
 	private _iterator;
 
-	/**
-	 * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
-	 * element, an array of DOM elements, a NodeList or a selector
-	 */
+	
 	constructor(ctx) {
-		/**
-		 * The context of the instance. Either a DOM element, an array of DOM
-		 * elements, a NodeList or a selector
-		 * @type {HTMLElement|HTMLElement[]|NodeList|string}
-		 * @access protected
-		 */
 		this.ctx = ctx;
-		/**
-		 * Specifies if the current browser is a IE (necessary for the node
-		 * normalization bug workaround). See {@link Mark#unwrapMatches}
-		 * @type {boolean}
-		 * @access protected
-		 */
+		
 		this.ie = false;
 		const ua = window.navigator.userAgent;
 		if(ua.indexOf("MSIE") > -1 || ua.indexOf("Trident") > -1) {
@@ -42,14 +15,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-	/**
-	 * Options defined by the user. They will be initialized from one of the
-	 * public methods. See {@link Mark#mark}, {@link Mark#markRegExp} and
-	 * {@link Mark#unmark} for option properties.
-	 * @type {object}
-	 * @param {object} [val] - An object that will be merged with defaults
-	 * @access protected
-	 */
 	set opt(val) {
 		this._opt = Object.assign({}, {
 			"element": "",
@@ -77,11 +42,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		return this._opt;
 	}
 
-	/**
-	 * An instance of DOMIterator
-	 * @type {DOMIterator}
-	 * @access protected
-	 */
+
 	get iterator() {
 		if(!this._iterator) {
 			this._iterator = new DOMIterator(
@@ -92,13 +53,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		return this._iterator;
 	}
 
-	/**
-	 * Logs a message if log is enabled
-	 * @param {string} msg - The message to log
-	 * @param {string} [level="debug"] - The log level, e.g. <code>warn</code>
-	 * <code>error</code>, <code>debug</code>
-	 * @access protected
-	 */
+
 	log(msg, level = "debug") {
 		const log = this.opt.log;
 		if(!this.opt.debug) {
@@ -109,23 +64,12 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-	/**
-	 * Escapes a string for usage within a regular expression
-	 * @param {string} str - The string to escape
-	 * @return {string}
-	 * @access protected
-	 */
+
 	escapeStr(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 
-	/**
-	 * Creates a regular expression string to match the specified search
-	 * term including synonyms, diacritics and accuracy if defined
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createRegExp(str) {
 		if(this.opt.wildcards !== "disabled") {
 			str = this.setupWildcardsRegExp(str);
@@ -151,12 +95,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str;
 	}
 
-	/**
-	 * Creates a regular expression string to match the defined synonyms
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createSynonymsRegExp(str) {
 		const syn = this.opt.synonyms,
 			sens = this.opt.caseSensitive ? "" : "i";
@@ -183,13 +122,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str;
 	}
 
-	/**
-	 * Sets up the regular expression string to allow later insertion of
-	 * wildcard regular expression matches
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	setupWildcardsRegExp(str) {
 		// replace single character wildcard with unicode 0001
 		str = str.replace(/(?:\\)*\?/g, val => {
@@ -201,13 +134,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Sets up the regular expression string to allow later insertion of
-	 * wildcard regular expression matches
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createWildcardsRegExp(str) {
 		// default to "enable" (i.e. to not include spaces)
 		// "withSpaces" uses `[\\S\\s]` instead of `.` because the latter
@@ -224,13 +151,7 @@ class Mark { // eslint-disable-line no-unused-vars
 			.replace(/\u0002/g, spaces ? "[\\S\\s]*?" : "\\S*");
 	}
 
-	/**
-	 * Sets up the regular expression string to allow later insertion of
-	 * designated characters (soft hyphens & zero width characters)
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	setupIgnoreJoinersRegExp(str) {
 		// adding a "null" unicode character as it will not be modified by the
 		// other "create" regular expression functions
@@ -246,13 +167,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Creates a regular expression string to allow ignoring of
-	 * designated characters (soft hyphens & zero width characters)
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createIgnoreJoinersRegExp(str) {
 		// u+00ad = soft hyphen
 		// u+200b = zero-width space
@@ -261,12 +176,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str.split("\u0000").join("[\\u00ad|\\u200b|\\u200c|\\u200d]?");
 	}
 
-	/**
-	 * Creates a regular expression string to match diacritics
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createDiacriticsRegExp(str) {
 		const sens = this.opt.caseSensitive ? "" : "i",
 			dct = this.opt.caseSensitive ? [
@@ -304,28 +214,12 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str;
 	}
 
-	/**
-	 * Creates a regular expression string that merges whitespace characters
-	 * including subsequent ones into a single pattern, one or multiple
-	 * whitespaces
-	 * @param  {string} str - The search term to be used
-	 * @return {string}
-	 * @access protected
-	 */
+
 	createMergedBlanksRegExp(str) {
 		return str.replace(/[\s]+/gmi, "[\\s]+");
 	}
 
-	/**
-	 * Creates a regular expression string to match the specified string with
-	 * the defined accuracy. As in the regular expression of "exactly" can be
-	 * a group containing a blank at the beginning, all regular expressions will
-	 * be created with two groups. The first group can be ignored (may contain
-	 * the said blank), the second contains the actual match
-	 * @param  {string} str - The searm term to be used
-	 * @return {str}
-	 * @access protected
-	 */
+
 	createAccuracyRegExp(str) {
 		const chars = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~¡¿`;
 		let acc = this.opt.accuracy,
@@ -347,19 +241,8 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-	/**
-	 * @typedef Mark~separatedKeywords
-	 * @type {object.<string>}
-	 * @property {array.<string>} keywords - The list of keywords
-	 * @property {number} length - The length
-	 */
-	/**
-	 * Returns a list of keywords dependent on whether separate word search
-	 * was defined. Also it filters empty keywords
-	 * @param {array} sv - The array of keywords
-	 * @return {Mark~separatedKeywords}
-	 * @access protected
-	 */
+
+
 	getSeparatedKeywords(sv) {
 		let stack = [];
 		sv.forEach(kw => {
@@ -384,29 +267,9 @@ class Mark { // eslint-disable-line no-unused-vars
 		};
 	}
 
-	/**
-	 * @typedef Mark~getTextNodesDict
-	 * @type {object.<string>}
-	 * @property {string} value - The composite value of all text nodes
-	 * @property {object[]} nodes - An array of objects
-	 * @property {number} nodes.start - The start position within the composite
-	 * value
-	 * @property {number} nodes.end - The end position within the composite
-	 * value
-	 * @property {HTMLElement} nodes.node - The DOM text node element
-	 */
-	/**
-	 * Callback
-	 * @callback Mark~getTextNodesCallback
-	 * @param {Mark~getTextNodesDict}
-	 */
-	/**
-	 * Calls the callback with an object containing all text nodes (including
-	 * iframe text nodes) with start and end positions and the composite value
-	 * of them (string)
-	 * @param {Mark~getTextNodesCallback} cb - Callback
-	 * @access protected
-	 */
+
+
+
 	getTextNodes(cb) {
 		let val = "",
 			nodes = [];
@@ -430,14 +293,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Checks if an element matches any of the specified exclude selectors. Also
-	 * it checks for elements in which no marks should be performed (e.g.
-	 * script and style tags) and optionally already marked elements
-	 * @param  {HTMLElement} el - The element to check
-	 * @return {boolean}
-	 * @access protected
-	 */
+
 	matchesExclude(el) {
 		return DOMIterator.matches(el, this.opt.exclude.concat([
 			// ignores the elements itself, not their childrens (selector *)
@@ -445,16 +301,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		]));
 	}
 
-	/**
-	 * Wraps the instance element and class around matches that fit the start
-	 * and end positions within the node
-	 * @param  {HTMLElement} node - The DOM text node
-	 * @param  {number} start - The position where to start wrapping
-	 * @param  {number} end - The position where to end wrapping
-	 * @return {HTMLElement} Returns the splitted text node that will appear
-	 * after the wrapped text node
-	 * @access protected
-	 */
+
 	wrapRangeInTextNode(node, start, end) {
 		const hEl = !this.opt.element ? "mark" : this.opt.element,
 			startNode = node.splitText(start),
@@ -469,40 +316,10 @@ class Mark { // eslint-disable-line no-unused-vars
 		return ret;
 	}
 
-	/**
-	 * @typedef Mark~wrapRangeInMappedTextNodeDict
-	 * @type {object.<string>}
-	 * @property {string} value - The composite value of all text nodes
-	 * @property {object[]} nodes - An array of objects
-	 * @property {number} nodes.start - The start position within the composite
-	 * value
-	 * @property {number} nodes.end - The end position within the composite
-	 * value
-	 * @property {HTMLElement} nodes.node - The DOM text node element
-	 */
-	/**
-	 * Each callback
-	 * @callback Mark~wrapMatchesEachCallback
-	 * @param {HTMLElement} node - The wrapped DOM element
-	 * @param {number} lastIndex - The last matching position within the
-	 * composite value of text nodes
-	 */
-	/**
-	 * Filter callback
-	 * @callback Mark~wrapMatchesFilterCallback
-	 * @param {HTMLElement} node - The matching text node DOM element
-	 */
-	/**
-	 * Determines matches by start and end positions using the text node
-	 * dictionary even across text nodes and calls
-	 * {@link Mark#wrapRangeInTextNode} to wrap them
-	 * @param  {Mark~wrapRangeInMappedTextNodeDict} dict - The dictionary
-	 * @param  {number} start - The start position of the match
-	 * @param  {number} end - The end position of the match
-	 * @param  {Mark~wrapMatchesFilterCallback} filterCb - Filter callback
-	 * @param  {Mark~wrapMatchesEachCallback} eachCb - Each callback
-	 * @access protected
-	 */
+
+
+
+
 	wrapRangeInMappedTextNode(dict, start, end, filterCb, eachCb) {
 		// iterate over all text nodes to find the one matching the positions
 		dict.nodes.every((n, i) => {
@@ -541,32 +358,10 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Filter callback before each wrapping
-	 * @callback Mark~wrapMatchesFilterCallback
-	 * @param {string} match - The matching string
-	 * @param {HTMLElement} node - The text node where the match occurs
-	 */
-	/**
-	 * Callback for each wrapped element
-	 * @callback Mark~wrapMatchesEachCallback
-	 * @param {HTMLElement} element - The marked DOM element
-	 */
-	/**
-	 * Callback on end
-	 * @callback Mark~wrapMatchesEndCallback
-	 */
-	/**
-	 * Wraps the instance element and class around matches within single HTML
-	 * elements in all contexts
-	 * @param {RegExp} regex - The regular expression to be searched for
-	 * @param {number} ignoreGroups - A number indicating the amount of RegExp
-	 * matching groups to ignore
-	 * @param {Mark~wrapMatchesFilterCallback} filterCb
-	 * @param {Mark~wrapMatchesEachCallback} eachCb
-	 * @param {Mark~wrapMatchesEndCallback} endCb
-	 * @access protected
-	 */
+
+
+
+
 	wrapMatches(regex, ignoreGroups, filterCb, eachCb, endCb) {
 		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
 		this.getTextNodes(dict => {
@@ -601,32 +396,10 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Callback for each wrapped element
-	 * @callback Mark~wrapMatchesAcrossElementsEachCallback
-	 * @param {HTMLElement} element - The marked DOM element
-	 */
-	/**
-	 * Filter callback before each wrapping
-	 * @callback Mark~wrapMatchesAcrossElementsFilterCallback
-	 * @param {string} match - The matching string
-	 * @param {HTMLElement} node - The text node where the match occurs
-	 */
-	/**
-	 * Callback on end
-	 * @callback Mark~wrapMatchesAcrossElementsEndCallback
-	 */
-	/**
-	 * Wraps the instance element and class around matches across all HTML
-	 * elements in all contexts
-	 * @param {RegExp} regex - The regular expression to be searched for
-	 * @param {number} ignoreGroups - A number indicating the amount of RegExp
-	 * matching groups to ignore
-	 * @param {Mark~wrapMatchesAcrossElementsFilterCallback} filterCb
-	 * @param {Mark~wrapMatchesAcrossElementsEachCallback} eachCb
-	 * @param {Mark~wrapMatchesAcrossElementsEndCallback} endCb
-	 * @access protected
-	 */
+
+
+
+
 	wrapMatchesAcrossElements(regex, ignoreGroups, filterCb, eachCb, endCb) {
 		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
 		this.getTextNodes(dict => {
@@ -657,13 +430,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Unwraps the specified DOM node with its content (text nodes or HTML)
-	 * without destroying possibly present events (using innerHTML) and
-	 * normalizes the parent at the end (merge splitted text nodes)
-	 * @param  {HTMLElement} node - The DOM node to unwrap
-	 * @access protected
-	 */
+
 	unwrapMatches(node) {
 		const parent = node.parentNode;
 		let docFrag = document.createDocumentFragment();
@@ -678,14 +445,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-	/**
-	 * Normalizes text nodes. It's a workaround for the native normalize method
-	 * that has a bug in IE (see attached link). Should only be used in IE
-	 * browsers as it's slower than the native method.
-	 * @see {@link http://tinyurl.com/z5asa8c}
-	 * @param {HTMLElement} node - The DOM node to normalize
-	 * @access protected
-	 */
+
 	normalizeTextNode(node) {
 		if(!node) {
 			return;
@@ -701,56 +461,13 @@ class Mark { // eslint-disable-line no-unused-vars
 		this.normalizeTextNode(node.nextSibling);
 	}
 
-	/**
-	 * Callback when finished
-	 * @callback Mark~commonDoneCallback
-	 * @param {number} totalMatches - The number of marked elements
-	 */
-	/**
-	 * @typedef Mark~commonOptions
-	 * @type {object.<string>}
-	 * @property {string} [element="mark"] - HTML element tag name
-	 * @property {string} [className] - An optional class name
-	 * @property {string[]} [exclude - An array with exclusion selectors.
-	 * Elements matching those selectors will be ignored
-	 * @property {boolean} [iframes=false] - Whether to search inside iframes
-	 * @property {Mark~commonDoneCallback} [done]
-	 * @property {boolean} [debug=false] - Wheter to log messages
-	 * @property {object} [log=window.console] - Where to log messages (only if
-	 * debug is true)
-	 */
-	/**
-	 * Callback for each marked element
-	 * @callback Mark~markRegExpEachCallback
-	 * @param {HTMLElement} element - The marked DOM element
-	 */
-	/**
-	 * Callback if there were no matches
-	 * @callback Mark~markRegExpNoMatchCallback
-	 * @param {RegExp} regexp - The regular expression
-	 */
-	/**
-	 * Callback to filter matches
-	 * @callback Mark~markRegExpFilterCallback
-	 * @param {HTMLElement} textNode - The text node which includes the match
-	 * @param {string} match - The matching string for the RegExp
-	 * @param {number} counter - A counter indicating the number of all marks
-	 */
-	/**
-	 * These options also include the common options from
-	 * {@link Mark~commonOptions}
-	 * @typedef Mark~markRegExpOptions
-	 * @type {object.<string>}
-	 * @property {Mark~markRegExpEachCallback} [each]
-	 * @property {Mark~markRegExpNoMatchCallback} [noMatch]
-	 * @property {Mark~markRegExpFilterCallback} [filter]
-	 */
-	/**
-	 * Marks a custom regular expression
-	 * @param  {RegExp} regexp - The regular expression
-	 * @param  {Mark~markRegExpOptions} [opt] - Optional options object
-	 * @access public
-	 */
+
+
+
+
+
+
+
 	markRegExp(regexp, opt) {
 		this.opt = opt;
 		this.log(`Searching with expression "${regexp}"`);
@@ -773,99 +490,14 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-	/**
-	 * Callback for each marked element
-	 * @callback Mark~markEachCallback
-	 * @param {HTMLElement} element - The marked DOM element
-	 */
-	/**
-	 * Callback if there were no matches
-	 * @callback Mark~markNoMatchCallback
-	 * @param {RegExp} term - The search term that was not found
-	 */
-	/**
-	 * Callback to filter matches
-	 * @callback Mark~markFilterCallback
-	 * @param {HTMLElement} textNode - The text node which includes the match
-	 * @param {string} match - The matching term
-	 * @param {number} totalCounter - A counter indicating the number of all
-	 * marks
-	 * @param {number} termCounter - A counter indicating the number of marks
-	 * for the specific match
-	 */
-	/**
-	 * @typedef Mark~markAccuracyObject
-	 * @type {object.<string>}
-	 * @property {string} value - A accuracy string value
-	 * @property {string[]} limiters - A custom array of limiters. For example
-	 * <code>["-", ","]</code>
-	 */
-	/**
-	 * @typedef Mark~markAccuracySetting
-	 * @type {string}
-	 * @property {"partially"|"complementary"|"exactly"|Mark~markAccuracyObject}
-	 * [accuracy="partially"] - Either one of the following string values:
-	 * <ul>
-	 *   <li><i>partially</i>: When searching for "lor" only "lor" inside
-	 *   "lorem" will be marked</li>
-	 *   <li><i>complementary</i>: When searching for "lor" the whole word
-	 *   "lorem" will be marked</li>
-	 *   <li><i>exactly</i>: When searching for "lor" only those exact words
-	 *   will be marked. In this example nothing inside "lorem". This value
-	 *   is equivalent to the previous option <i>wordBoundary</i></li>
-	 * </ul>
-	 * Or an object containing two properties:
-	 * <ul>
-	 *   <li><i>value</i>: One of the above named string values</li>
-	 *   <li><i>limiters</i>: A custom array of string limiters for accuracy
-	 *   "exactly" or "complementary"</li>
-	 * </ul>
-	 */
-	/**
-	 * @typedef Mark~markWildcardsSetting
-	 * @type {string}
-	 * @property {"disabled"|"enabled"|"withSpaces"}
-	 * [wildcards="disabled"] - Set to any of the following string values:
-	 * <ul>
-	 *   <li><i>disabled</i>: Disable wildcard usage</li>
-	 *   <li><i>enabled</i>: When searching for "lor?m", the "?" will match zero
-	 *   or one non-space character (e.g. "lorm", "loram", "lor3m", etc). When
-	 *   searching for "lor*m", the "*" will match zero or more non-space
-	 *   characters (e.g. "lorm", "loram", "lor123m", etc).</li>
-	 *   <li><i>withSpaces</i>: When searching for "lor?m", the "?" will
-	 *   match zero or one space or non-space character (e.g. "lor m", "loram",
-	 *   etc). When searching for "lor*m", the "*" will match zero or more space
-	 *   or non-space characters (e.g. "lorm", "lore et dolor ipsum", "lor: m",
-	 *   etc).</li>
-	 * </ul>
-	 */
-	/**
-	 * These options also include the common options from
-	 * {@link Mark~commonOptions}
-	 * @typedef Mark~markOptions
-	 * @type {object.<string>}
-	 * @property {boolean} [separateWordSearch=true] - Whether to search for
-	 * each word separated by a blank instead of the complete term
-	 * @property {boolean} [diacritics=true] - If diacritic characters should be
-	 * matched. ({@link https://en.wikipedia.org/wiki/Diacritic Diacritics})
-	 * @property {object} [synonyms] - An object with synonyms. The key will be
-	 * a synonym for the value and the value for the key
-	 * @property {Mark~markAccuracySetting} [accuracy]
-	 * @property {Mark~markWildcardsSetting} [wildcards]
-	 * @property {boolean} [acrossElements=false] - Whether to find matches
-	 * across HTML elements. By default, only matches within single HTML
-	 * elements will be found
-	 * @property {Mark~markEachCallback} [each]
-	 * @property {Mark~markNoMatchCallback} [noMatch]
-	 * @property {Mark~markFilterCallback} [filter]
-	 */
-	/**
-	 * Marks the specified search terms
-	 * @param {string|string[]} [sv] - Search value, either a search string or
-	 * an array containing multiple search strings
-	 * @param  {Mark~markOptions} [opt] - Optional options object
-	 * @access public
-	 */
+
+
+
+
+
+
+
+
 	mark(sv, opt) {
 		this.opt = opt;
 		let totalMatches = 0,
@@ -907,12 +539,7 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-	/**
-	 * Removes all marked elements inside the context with their HTML and
-	 * normalizes the parent at the end
-	 * @param  {Mark~commonOptions} [opt] - Optional options object
-	 * @access public
-	 */
+
 	unmark(opt) {
 		this.opt = opt;
 		let sel = this.opt.element ? this.opt.element : "*";
@@ -935,64 +562,20 @@ class Mark { // eslint-disable-line no-unused-vars
 	}
 }
 
-/**
- * A NodeIterator with iframes support and a method to check if an element is
- * matching a specified selector
- * @example
- * const iterator = new DOMIterator(
- *     document.querySelector("#context"), true
- * );
- * iterator.forEachNode(NodeFilter.SHOW_TEXT, node => {
- *     console.log(node);
- * }, node => {
- *     if(DOMIterator.matches(node.parentNode, ".ignore")){
- *         return NodeFilter.FILTER_REJECT;
- *     } else {
- *         return NodeFilter.FILTER_ACCEPT;
- *     }
- * }, () => {
- *     console.log("DONE");
- * });
- * @todo Outsource into separate repository and include it in the build
- */
+
 class DOMIterator {
 	private ctx;
 	private exclude;
 
-	/**
-	 * @param {HTMLElement|HTMLElement[]|NodeList|string} ctx - The context DOM
-	 * element, an array of DOM elements, a NodeList or a selector
-	 * @param {string[]} [exclude=[]] - An array containing exclusion selectors
-	 * for iframes
-	 * @param {number} [iframesTimeout=5000] - A number indicating the ms to
-	 * wait before an iframe should be skipped, in case the load event isn't
-	 * fired. This also applies if the user is offline and the resource of the
-	 * iframe is online (either by the browsers "offline" mode or because
-	 * there's no internet connection)
-	 */
+
 	constructor(ctx, exclude = []) {
-		/**
-		 * The context of the instance. Either a DOM element, an array of DOM
-		 * elements, a NodeList or a selector
-		 * @type {HTMLElement|HTMLElement[]|NodeList|string}
-		 * @access protected
-		 */
+
 		this.ctx = ctx;
-		/**
-		 * An array containing exclusion selectors for iframes
-		 * @type {string[]}
-		 */
+
 		this.exclude = exclude;
 	}
 
-	/**
-	 * Checks if the specified DOM element matches the selector
-	 * @param  {HTMLElement} element - The DOM element
-	 * @param  {string|string[]} selector - The selector or an array with
-	 * selectors
-	 * @return {boolean}
-	 * @access public
-	 */
+
 	static matches(element, selector) {
 		const selectors = typeof selector === "string" ? [selector] : selector,
 			fn = (
@@ -1018,11 +601,7 @@ class DOMIterator {
 		}
 	}
 
-	/**
-	 * Returns all contexts filtered by duplicates (even nested)
-	 * @return {HTMLElement[]} - An array containing DOM contexts
-	 * @access protected
-	 */
+
 	getContexts() {
 		let ctx,
 			filteredCtx = [];
@@ -1051,32 +630,10 @@ class DOMIterator {
 		return filteredCtx;
 	}
 
-	/**
-	 * Creates a NodeIterator on the specified context
-	 * @see {@link https://developer.mozilla.org/en/docs/Web/API/NodeIterator}
-	 * @param {HTMLElement} ctx - The context DOM element
-	 * @param {DOMIterator~whatToShow} whatToShow
-	 * @param {DOMIterator~filterCb} filter
-	 * @return {NodeIterator}
-	 * @access protected
-	 */
 	createIterator(ctx, whatToShow, filter) {
 		return document.createNodeIterator(ctx, whatToShow, filter, false);
 	}
 
-	/**
-	 * @typedef {DOMIterator~getIteratorNodeReturn}
-	 * @type {object.<string>}
-	 * @property {HTMLElement} prevNode - The previous node or null if there is
-	 * no
-	 * @property {HTMLElement} node - The current node
-	 */
-	/**
-	 * Returns the previous and current node of the specified iterator
-	 * @param {NodeIterator} itr - The iterator
-	 * @return {DOMIterator~getIteratorNodeReturn}
-	 * @access protected
-	 */
 	getIteratorNode(itr) {
 		const prevNode = itr.previousNode();
 		let node;
@@ -1091,32 +648,24 @@ class DOMIterator {
 		};
 	}
 
-	/**
-	 * Iterates through all nodes in the specified context and handles iframe
-	 * nodes at the correct position
-	 * @param {DOMIterator~whatToShow} whatToShow
-	 * @param {HTMLElement} ctx - The context
-	 * @param  {DOMIterator~forEachNodeCallback} eachCb - Each callback
-	 * @param {DOMIterator~filterCb} filterCb - Filter callback
-	 * @param {DOMIterator~forEachNodeEndCallback} doneCb - End callback
-	 * @access protected
-	 */
+
 	iterateThroughNodes(whatToShow, ctx, eachCb, filterCb, doneCb) {
 		const itr = this.createIterator(ctx, whatToShow, filterCb);
-		let ifr = [],
-			elements = [],
-			node, prevNode, retrieveNodes = () => {
-				({
-					prevNode,
-					node
-				} = this.getIteratorNode(itr));
-				return node;
-			};
-		while(retrieveNodes()) {
+
+		let elements = [];
+		let node;
+
+		const retrieveNodes = () => {
+			const result = this.getIteratorNode(itr);
+			return result.node;
+		};
+
+		while(node = retrieveNodes()) {
 			// it's faster to call the each callback in an array loop
 			// than in this while loop
 			elements.push(node);
 		}
+
 		elements.forEach(node => {
 			eachCb(node);
 		});
@@ -1124,24 +673,9 @@ class DOMIterator {
 		doneCb();
 	}
 
-	/**
-	 * Callback for each node
-	 * @callback DOMIterator~forEachNodeCallback
-	 * @param {HTMLElement} node - The DOM text node element
-	 */
-	/**
-	 * Callback if all contexts were handled
-	 * @callback DOMIterator~forEachNodeEndCallback
-	 */
-	/**
-	 * Iterates over all contexts and initializes
-	 * {@link DOMIterator#iterateThroughNodes iterateThroughNodes} on them
-	 * @param {DOMIterator~whatToShow} whatToShow
-	 * @param  {DOMIterator~forEachNodeCallback} each - Each callback
-	 * @param {DOMIterator~filterCb} filter - Filter callback
-	 * @param {DOMIterator~forEachNodeEndCallback} done - End callback
-	 * @access public
-	 */
+
+
+
 	forEachNode(whatToShow, each, filter, done = () => {}) {
 		const contexts = this.getContexts();
 		let open = contexts.length;
@@ -1157,18 +691,8 @@ class DOMIterator {
 		});
 	}
 
-	/**
-	 * Callback to filter nodes. Can return e.g. NodeFilter.FILTER_ACCEPT or
-	 * NodeFilter.FILTER_REJECT
-	 * @see {@link http://tinyurl.com/zdczmm2}
-	 * @callback DOMIterator~filterCb
-	 * @param {HTMLElement} node - The node to filter
-	 */
-	/**
-	 * @typedef DOMIterator~whatToShow
-	 * @see {@link http://tinyurl.com/zfqqkx2}
-	 * @type {number}
-	 */
+	
+	
 }
 
 export default Mark;

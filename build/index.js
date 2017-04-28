@@ -1,9 +1,3 @@
-/*!***************************************************
- * mark.js v8.9.0
- * https://github.com/julmot/mark.js
- * Copyright (c) 2014–2017, Julian Motz
- * Released under the MIT license https://git.io/vwTVl
- *****************************************************/
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Mark {
@@ -490,14 +484,13 @@ class DOMIterator {
     }
     iterateThroughNodes(whatToShow, ctx, eachCb, filterCb, doneCb) {
         const itr = this.createIterator(ctx, whatToShow, filterCb);
-        let ifr = [], elements = [], node, prevNode, retrieveNodes = () => {
-            ({
-                prevNode,
-                node
-            } = this.getIteratorNode(itr));
-            return node;
+        let elements = [];
+        let node;
+        const retrieveNodes = () => {
+            const result = this.getIteratorNode(itr);
+            return result.node;
         };
-        while (retrieveNodes()) {
+        while (node = retrieveNodes()) {
             elements.push(node);
         }
         elements.forEach(node => {
