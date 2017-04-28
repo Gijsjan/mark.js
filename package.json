@@ -1,5 +1,5 @@
 {
-  "name": "mark.js",
+  "name": "mark.ts",
   "version": "1.0.2",
   "description": "",
   "main": "build/index.js",
