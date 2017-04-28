@@ -11,7 +11,6 @@ class Mark { // eslint-disable-line no-unused-vars
 	private _opt;
 	private _iterator;
 
-	
 	constructor(ctx) {
 		this.ctx = ctx;
 		
