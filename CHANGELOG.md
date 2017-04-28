@@ -1,3 +1,6 @@
+### v1.0.3	(2017/4/28 16:58)
+* Restore copyright header
+
 ### v1.0.2	(2017/4/28 16:44)
 * Add hi-bump
 * Remove destructuring bug
