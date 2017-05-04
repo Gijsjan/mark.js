@@ -1,3 +1,6 @@
+### v1.0.5	(2017/5/4 15:40)
+* Code clean up
+
 ### v1.0.4	(2017/4/28 17:6)
 * Clarify copyright header
 * Merge branch 'master' of https://github.com/Gijsjan/mark.js
