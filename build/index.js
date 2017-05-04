@@ -121,20 +121,21 @@ class Mark {
         return str.split("\u0000").join("[\\u00ad|\\u200b|\\u200c|\\u200d]?");
     }
     createDiacriticsRegExp(str) {
-        const sens = this.opt.caseSensitive ? "" : "i", dct = this.opt.caseSensitive ? [
-            "aàáâãäåāąă", "AÀÁÂÃÄÅĀĄĂ", "cçćč", "CÇĆČ", "dđď", "DĐĎ",
-            "eèéêëěēę", "EÈÉÊËĚĒĘ", "iìíîïī", "IÌÍÎÏĪ", "lł", "LŁ", "nñňń",
-            "NÑŇŃ", "oòóôõöøō", "OÒÓÔÕÖØŌ", "rř", "RŘ", "sšśșş", "SŠŚȘŞ",
-            "tťțţ", "TŤȚŢ", "uùúûüůū", "UÙÚÛÜŮŪ", "yÿý", "YŸÝ", "zžżź",
-            "ZŽŻŹ"
+        const sens = this.opt.caseSensitive ? '' : 'i';
+        const dct = this.opt.caseSensitive ? [
+            'aàáâãäåāąă', 'AÀÁÂÃÄÅĀĄĂ', 'cçćč', 'CÇĆČ', 'dđď', 'DĐĎ',
+            'eèéêëěēę', 'EÈÉÊËĚĒĘ', 'iìíîïī', 'IÌÍÎÏĪ', 'lł', 'LŁ', 'nñňń',
+            'NÑŇŃ', 'oòóôõöøō', 'OÒÓÔÕÖØŌ', 'rř', 'RŘ', 'sšśșş', 'SŠŚȘŞ',
+            'tťțţ', 'TŤȚŢ', 'uùúûüůū', 'UÙÚÛÜŮŪ', 'yÿý', 'YŸÝ', 'zžżź',
+            'ZŽŻŹ'
         ] : [
-            "aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ", "cçćčCÇĆČ", "dđďDĐĎ",
-            "eèéêëěēęEÈÉÊËĚĒĘ", "iìíîïīIÌÍÎÏĪ", "lłLŁ", "nñňńNÑŇŃ",
-            "oòóôõöøōOÒÓÔÕÖØŌ", "rřRŘ", "sšśșşSŠŚȘŞ", "tťțţTŤȚŢ",
-            "uùúûüůūUÙÚÛÜŮŪ", "yÿýYŸÝ", "zžżźZŽŻŹ"
+            'aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ', 'cçćčCÇĆČ', 'dđďDĐĎ',
+            'eèéêëěēęEÈÉÊËĚĒĘ', 'iìíîïīIÌÍÎÏĪ', 'lłLŁ', 'nñňńNÑŇŃ',
+            'oòóôõöøōOÒÓÔÕÖØŌ', 'rřRŘ', 'sšśșşSŠŚȘŞ', 'tťțţTŤȚŢ',
+            'uùúûüůūUÙÚÛÜŮŪ', 'yÿýYŸÝ', 'zžżźZŽŻŹ'
         ];
-        let handled = [];
-        str.split("").forEach(ch => {
+        const handled = [];
+        str.split('').forEach(ch => {
             dct.every(dct => {
                 if (dct.indexOf(ch) !== -1) {
                     if (handled.indexOf(dct) > -1) {
@@ -358,17 +359,25 @@ class Mark {
     }
     mark(sv, opt) {
         this.opt = opt;
-        let totalMatches = 0, fn = "wrapMatches";
-        const { keywords: kwArr, length: kwArrLen } = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv), sens = this.opt.caseSensitive ? "" : "i", handler = kw => {
-            let regex = new RegExp(this.createRegExp(kw), `gm${sens}`), matches = 0;
+        let totalMatches = 0;
+        const i = this.opt.caseSensitive ? '' : 'i';
+        const fn = (this.opt.acrossElements) ?
+            "wrapMatchesAcrossElements" :
+            "wrapMatches";
+        const { keywords: kwArr, length: kwArrLen } = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv);
+        if (!kwArrLen)
+            return this.opt.done(totalMatches);
+        const handler = kw => {
+            let regex = new RegExp(this.createRegExp(kw), `gm${i}`);
+            let matches = 0;
             this.log(`Searching with expression "${regex}"`);
-            this[fn](regex, 1, (term, node) => {
-                return this.opt.filter(node, kw, totalMatches, matches);
-            }, element => {
+            const filterCb = (term, node) => this.opt.filter(node, kw, totalMatches, matches);
+            const eachCb = element => {
                 matches++;
                 totalMatches++;
                 this.opt.each(element);
-            }, () => {
+            };
+            const endCb = () => {
                 if (matches === 0) {
                     this.opt.noMatch(kw);
                 }
@@ -378,17 +387,10 @@ class Mark {
                 else {
                     handler(kwArr[kwArr.indexOf(kw) + 1]);
                 }
-            });
+            };
+            this[fn](regex, 1, filterCb, eachCb, endCb);
         };
-        if (this.opt.acrossElements) {
-            fn = "wrapMatchesAcrossElements";
-        }
-        if (kwArrLen === 0) {
-            this.opt.done(totalMatches);
-        }
-        else {
-            handler(kwArr[0]);
-        }
+        handler(kwArr[0]);
     }
     unmark(opt) {
         this.opt = opt;

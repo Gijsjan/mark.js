@@ -48,7 +48,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		return this._opt;
 	}
 
-
 	get iterator() {
 		if(!this._iterator) {
 			this._iterator = new DOMIterator(
@@ -58,7 +57,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 		return this._iterator;
 	}
-
 
 	log(msg, level = "debug") {
 		const log = this.opt.log;
@@ -70,11 +68,9 @@ class Mark { // eslint-disable-line no-unused-vars
 		}
 	}
 
-
 	escapeStr(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
-
 
 	createRegExp(str) {
 		if(this.opt.wildcards !== "disabled") {
@@ -100,7 +96,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		str = this.createAccuracyRegExp(str);
 		return str;
 	}
-
 
 	createSynonymsRegExp(str) {
 		const syn = this.opt.synonyms,
@@ -128,7 +123,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str;
 	}
 
-
 	setupWildcardsRegExp(str) {
 		// replace single character wildcard with unicode 0001
 		str = str.replace(/(?:\\)*\?/g, val => {
@@ -139,7 +133,6 @@ class Mark { // eslint-disable-line no-unused-vars
 			return val.charAt(0) === "\\" ? "*" : "\u0002";
 		});
 	}
-
 
 	createWildcardsRegExp(str) {
 		// default to "enable" (i.e. to not include spaces)
@@ -157,7 +150,6 @@ class Mark { // eslint-disable-line no-unused-vars
 			.replace(/\u0002/g, spaces ? "[\\S\\s]*?" : "\\S*");
 	}
 
-
 	setupIgnoreJoinersRegExp(str) {
 		// adding a "null" unicode character as it will not be modified by the
 		// other "create" regular expression functions
@@ -173,7 +165,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-
 	createIgnoreJoinersRegExp(str) {
 		// u+00ad = soft hyphen
 		// u+200b = zero-width space
@@ -182,23 +173,22 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str.split("\u0000").join("[\\u00ad|\\u200b|\\u200c|\\u200d]?");
 	}
 
-
 	createDiacriticsRegExp(str) {
-		const sens = this.opt.caseSensitive ? "" : "i",
-			dct = this.opt.caseSensitive ? [
-				"aàáâãäåāąă", "AÀÁÂÃÄÅĀĄĂ", "cçćč", "CÇĆČ", "dđď", "DĐĎ",
-				"eèéêëěēę", "EÈÉÊËĚĒĘ", "iìíîïī", "IÌÍÎÏĪ", "lł", "LŁ", "nñňń",
-				"NÑŇŃ", "oòóôõöøō", "OÒÓÔÕÖØŌ", "rř", "RŘ", "sšśșş", "SŠŚȘŞ",
-				"tťțţ", "TŤȚŢ", "uùúûüůū", "UÙÚÛÜŮŪ", "yÿý", "YŸÝ", "zžżź",
-				"ZŽŻŹ"
+		const sens = this.opt.caseSensitive ? '' : 'i';
+		const dct = this.opt.caseSensitive ? [
+				'aàáâãäåāąă', 'AÀÁÂÃÄÅĀĄĂ', 'cçćč', 'CÇĆČ', 'dđď', 'DĐĎ',
+				'eèéêëěēę', 'EÈÉÊËĚĒĘ', 'iìíîïī', 'IÌÍÎÏĪ', 'lł', 'LŁ', 'nñňń',
+				'NÑŇŃ', 'oòóôõöøō', 'OÒÓÔÕÖØŌ', 'rř', 'RŘ', 'sšśșş', 'SŠŚȘŞ',
+				'tťțţ', 'TŤȚŢ', 'uùúûüůū', 'UÙÚÛÜŮŪ', 'yÿý', 'YŸÝ', 'zžżź',
+				'ZŽŻŹ'
 			] : [
-				"aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ", "cçćčCÇĆČ", "dđďDĐĎ",
-				"eèéêëěēęEÈÉÊËĚĒĘ", "iìíîïīIÌÍÎÏĪ", "lłLŁ", "nñňńNÑŇŃ",
-				"oòóôõöøōOÒÓÔÕÖØŌ", "rřRŘ", "sšśșşSŠŚȘŞ", "tťțţTŤȚŢ",
-				"uùúûüůūUÙÚÛÜŮŪ", "yÿýYŸÝ", "zžżźZŽŻŹ"
+				'aàáâãäåāąăAÀÁÂÃÄÅĀĄĂ', 'cçćčCÇĆČ', 'dđďDĐĎ',
+				'eèéêëěēęEÈÉÊËĚĒĘ', 'iìíîïīIÌÍÎÏĪ', 'lłLŁ', 'nñňńNÑŇŃ',
+				'oòóôõöøōOÒÓÔÕÖØŌ', 'rřRŘ', 'sšśșşSŠŚȘŞ', 'tťțţTŤȚŢ',
+				'uùúûüůūUÙÚÛÜŮŪ', 'yÿýYŸÝ', 'zžżźZŽŻŹ'
 			];
-		let handled = [];
-		str.split("").forEach(ch => {
+		const handled = [];
+		str.split('').forEach(ch => {
 			dct.every(dct => {
 				// Check if the character is inside a diacritics list
 				if(dct.indexOf(ch) !== -1) {
@@ -220,11 +210,9 @@ class Mark { // eslint-disable-line no-unused-vars
 		return str;
 	}
 
-
 	createMergedBlanksRegExp(str) {
 		return str.replace(/[\s]+/gmi, "[\\s]+");
 	}
-
 
 	createAccuracyRegExp(str) {
 		const chars = `!"#$%&'()*+,-./:;<=>?@[\\]^_\`{|}~¡¿`;
@@ -246,8 +234,6 @@ class Mark { // eslint-disable-line no-unused-vars
 			return `(^|\\s${lsJoin})(${str})(?=$|\\s${lsJoin})`;
 		}
 	}
-
-
 
 	getSeparatedKeywords(sv) {
 		let stack = [];
@@ -273,9 +259,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		};
 	}
 
-
-
-
 	getTextNodes(cb) {
 		let val = "",
 			nodes = [];
@@ -299,7 +282,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-
 	matchesExclude(el) {
 		return DOMIterator.matches(el, this.opt.exclude.concat([
 			// ignores the elements itself, not their childrens (selector *)
@@ -321,10 +303,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		startNode.parentNode.replaceChild(repl, startNode);
 		return ret;
 	}
-
-
-
-
 
 	wrapRangeInMappedTextNode(dict, start, end, filterCb, eachCb) {
 		// iterate over all text nodes to find the one matching the positions
@@ -364,10 +342,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-
-
-
-
 	wrapMatches(regex, ignoreGroups, filterCb, eachCb, endCb) {
 		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
 		this.getTextNodes(dict => {
@@ -401,10 +375,6 @@ class Mark { // eslint-disable-line no-unused-vars
 			endCb();
 		});
 	}
-
-
-
-
 
 	wrapMatchesAcrossElements(regex, ignoreGroups, filterCb, eachCb, endCb) {
 		const matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
@@ -467,13 +437,6 @@ class Mark { // eslint-disable-line no-unused-vars
 		this.normalizeTextNode(node.nextSibling);
 	}
 
-
-
-
-
-
-
-
 	markRegExp(regexp, opt) {
 		this.opt = opt;
 		this.log(`Searching with expression "${regexp}"`);
@@ -496,53 +459,45 @@ class Mark { // eslint-disable-line no-unused-vars
 		});
 	}
 
-
-
-
-
-
-
-
-
 	mark(sv, opt) {
 		this.opt = opt;
-		let totalMatches = 0,
-			fn = "wrapMatches";
-
+		let totalMatches = 0;
+		const i = this.opt.caseSensitive ? '' : 'i';
+		const fn = (this.opt.acrossElements) ?
+			"wrapMatchesAcrossElements" :
+			"wrapMatches";
 		const {
 			keywords: kwArr,
 			length: kwArrLen
-		} = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv),
-			sens = this.opt.caseSensitive ? "" : "i",
-			handler = kw => { // async function calls as iframes are async too
-				let regex = new RegExp(this.createRegExp(kw), `gm${sens}`),
-					matches = 0;
-				this.log(`Searching with expression "${regex}"`);
-				this[fn](regex, 1, (term, node) => {
-					return this.opt.filter(node, kw, totalMatches, matches);
-				}, element => {
-					matches++;
-					totalMatches++;
-					this.opt.each(element);
-				}, () => {
-					if(matches === 0) {
-						this.opt.noMatch(kw);
-					}
-					if(kwArr[kwArrLen - 1] === kw) {
-						this.opt.done(totalMatches);
-					} else {
-						handler(kwArr[kwArr.indexOf(kw) + 1]);
-					}
-				});
+		} = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv);
+		if (!kwArrLen) return this.opt.done(totalMatches);
+
+		const handler = kw => { // async function calls as iframes are async too
+			let regex = new RegExp(this.createRegExp(kw), `gm${i}`);
+			let matches = 0;
+			this.log(`Searching with expression "${regex}"`);
+
+			const filterCb = (term, node) => this.opt.filter(node, kw, totalMatches, matches);
+			const eachCb = element => {
+				matches++;
+				totalMatches++;
+				this.opt.each(element);
 			};
-		if(this.opt.acrossElements) {
-			fn = "wrapMatchesAcrossElements";
-		}
-		if(kwArrLen === 0) {
-			this.opt.done(totalMatches);
-		} else {
-			handler(kwArr[0]);
-		}
+			const endCb = () => {
+				if(matches === 0) {
+					this.opt.noMatch(kw);
+				}
+				if(kwArr[kwArrLen - 1] === kw) {
+					this.opt.done(totalMatches);
+				} else {
+					handler(kwArr[kwArr.indexOf(kw) + 1]);
+				}
+			};
+
+			this[fn](regex, 1, filterCb, eachCb, endCb);
+		};
+
+		handler(kwArr[0]);
 	}
 
 
@@ -568,19 +523,14 @@ class Mark { // eslint-disable-line no-unused-vars
 	}
 }
 
-
 class DOMIterator {
 	private ctx;
 	private exclude;
 
-
 	constructor(ctx, exclude = []) {
-
 		this.ctx = ctx;
-
 		this.exclude = exclude;
 	}
-
 
 	static matches(element, selector) {
 		const selectors = typeof selector === "string" ? [selector] : selector,

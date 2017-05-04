@@ -30,7 +30,7 @@ declare class Mark {
     unwrapMatches(node: any): void;
     normalizeTextNode(node: any): void;
     markRegExp(regexp: any, opt: any): void;
-    mark(sv: any, opt: any): void;
+    mark(sv: any, opt: any): any;
     unmark(opt: any): void;
 }
 export default Mark;
